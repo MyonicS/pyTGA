@@ -1,0 +1,4 @@
+stage,start_index,end_index
+stage1,0,100
+stage2,101,300
+stage3,301,600
