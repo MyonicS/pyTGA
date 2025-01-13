@@ -76,9 +76,10 @@ class TGA_exp:
     def add_method(self, method):
         self.method = method
 
-    def combine_stages(self, stage_names, new_stage_name='full'):
+    def combine_stages(self, stage_names, new_stage_name='comb_stage'):
         """
-        Combine a list of stages in a TGA_exp object into a new stage
+        Combine a list of stages in a TGA_exp object into a new stage.
+        Use 'all' to combine all base stages in the experiment including the label 'stage'. # To-do: This needs to be done better
         """
         if stage_names == 'all':
             stage_names = [i for i in self.stage_names() if 'stage' in i]
@@ -100,12 +101,17 @@ class TGA_pyro(TGA_exp):
     Attributes:
         Tmax (float): The temperature at which the maximum rate of weight loss occurs.
         T50 (float): The temperature at which 50% of the weight has been lost.
+        cracking_stage_name (str): The name of the cracking stage, e.g. 'stage4'.
+        burnoff_stage_name (str): The name of the burnoff stage, e.g. 'stage8'.
+
     """
 
     def __init__(self, stage_files=None):
         super().__init__(stage_files)
         self.Tmax = None
         self.T50 = None
+        self.cracking_stage_name = 'stage4'
+        self.burnoff_stage_name = 'stage8'
 
     def cracking(self):
         """
@@ -114,7 +120,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             pandas.DataFrame: The cracking stage data.
         """
-        return self.stages['stage4']
+        return self.stages[self.cracking_stage_name]
 
     def burnoff(self):
         """
@@ -123,7 +129,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             pandas.DataFrame: The burnoff stage data.
         """
-        return self.stages['stage8']
+        return self.stages[self.burnoff_stage_name]
 
     def m_cat(self):
         """
@@ -603,7 +609,7 @@ def quickplot(tga_exp):
     '''
     Generates a simple plot of the TGA data with time as x axis and weight and temperature as y axes.
     '''
-    tga_exp.combine_stages('all')
+    tga_exp.combine_stages('all', 'full')
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
     ax.plot(tga_exp.stages['full']['Time'],tga_exp.stages['full']['Unsubtracted weight'])
