@@ -22,6 +22,7 @@ class TGA_exp:
     def __init__(self, stage_files=None):
         self.stages = {}
         self.method = None
+        self.calibration = None
         self.manufacturer = None
         if stage_files is not None:
             for stage, file in stage_files.items():
@@ -347,6 +348,7 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
             calib = None 
         method = re.split(r'Pre-Run Actions',split[0])[1]
         tga_exp_instance.add_method('Method:'+method)
+        tga_exp_instance.calibration = ('Calibration:'+calib)
     
     # Add stages to the TGA_exp instance
     for i in range(len(section_numbers)):
@@ -407,7 +409,7 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
     rename_columns : bool
         Whether to rename the columns to the default ones used in this library (as in Perkin Elmer TGA files). Default is True.
         When False, the original column names of the Mettler Toledo file are used.
-    stage split: str or dict or None
+    stage split : str or dict or None
         Specifies whether or how to split the TGA experiment into stages.
         If a string, it should be the path to a csv file containing the stage split information. File formating:
         stage, start_index, end_index

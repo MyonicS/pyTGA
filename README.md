@@ -33,7 +33,7 @@ My_Scripts
 ```
 
 ## Usage
-Check the example notebook for how to use this package, documentantion to be extended.
+Check the example notebook for how to use this package, documentantion to be extended. For parsing differences between Mettler Toledo and Perkin Elmer check the 'parsing' notebook.
 
 ## Support
 If you find bugs or have other questions send me a message or open an issue.
