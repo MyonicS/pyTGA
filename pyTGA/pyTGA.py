@@ -271,7 +271,7 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
     if manufacturer == 'infer':
         manufacturer = infer_manufacturer(filepath)
     if manufacturer == 'Perkin Elmer':
-        return parse_txt(filepath, **kwargs)
+        return parse_PE(filepath, **kwargs)
     elif manufacturer == 'Mettler Toledo':
         return parse_MT(filepath, **kwargs)
     else:
@@ -365,6 +365,11 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
             return calc_DTGA_pyro(tga_exp_instance)
     else:
         return tga_exp_instance
+
+# adding alias
+
+parse_PE = parse_txt
+
 
 # def calc_DTGA_all(tga_exp):
 #     with warnings.catch_warnings():
