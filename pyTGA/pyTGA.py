@@ -22,6 +22,7 @@ class TGA_exp:
     def __init__(self, stage_files=None):
         self.stages = {}
         self.method = None
+        self.manufacturer = None
         if stage_files is not None:
             for stage, file in stage_files.items():
                 data = pd.read_csv(file)
@@ -302,9 +303,15 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
         tga_exp_instance = TGA_pyro_iso()
     else:
         raise ValueError("type must be 'general','pyro' or pyro_iso'")
+    
+    # setting the manufacturer
+    tga_exp_instance.manufacturer = 'Perkin Elmer'
+
     names = ['Blank', 'Time', 'Unsubtracted weight', 'Baseline weight',
             'Program Temp.', 'Sample Temp.', 'Sample Purge Flow',
             'Balance purge flow']
+    
+
 
     def read_section(data):
         try:
@@ -424,7 +431,9 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
         tga_exp_instance = TGA_pyro_iso()
     else:
         raise ValueError("exp_type must be 'general','pyro' or pyro_iso'")
-
+    
+    # setting the manufacturer
+    tga_exp_instance.manufacturer = 'Mettler Toledo'
 
 
     with open(filepath, encoding=result['encoding']) as full:

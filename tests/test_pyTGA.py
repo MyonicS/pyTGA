@@ -11,15 +11,19 @@ import pyTGA as tga
 testfiledir = os.path.join(current_dir, '..', 'example_data', 'manufacturers')
 
 def test_infer_manufacturer():
-    # Construct the full path to the test file
-    testfile = os.path.join(testfiledir, 'MT_example_file.txt')
-    testfile2 = os.path.join(testfiledir, 'PE_example_file.txt')
-    # Call the function and check the result
+    testfile = os.path.join(testfiledir, 'MettlerToledo_example_file.txt')
+    testfile2 = os.path.join(testfiledir, 'PerkinElmer_example_file.txt')
     result = tga.infer_manufacturer(testfile)
     result2 = tga.infer_manufacturer(testfile2)
-    assert result == 'Mettler Toledo'
-    assert result2 == 'Perkin Elmer'
+    assert result == 'Mettler Toledo' 
+    assert result2 == 'Perkin Elmer' 
 
+    
+def test_manufacturer_attribute():
+    tga_exp1 = tga.parse_TGA(os.path.join(testfiledir, 'MettlerToledo_example_file.txt'))
+    tga_exp2 = tga.parse_TGA(os.path.join(testfiledir, 'PerkinElmer_example_file.txt'))
+    assert tga_exp1.manufacturer == 'Mettler Toledo'
+    assert tga_exp2.manufacturer == 'Perkin Elmer'
 
 def test_plastic_cracking_class():
     tga_exp = tga.parse_TGA('example_data/plastic_cracking_example.txt',exp_type='pyro',calculate_DTGA=True)
