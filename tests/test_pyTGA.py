@@ -30,4 +30,4 @@ def test_plastic_cracking_class():
     tga_exp.Tmax = tga.calc_Tmax(tga_exp.cracking())
     tga_exp.T50 = tga.calc_T50(tga_exp.cracking())
     assert tga_exp.Tmax == 245.0
-    assert tga_exp.T50 == 245.0
+    assert tga_exp.T50 == 230.89

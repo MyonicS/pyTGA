@@ -602,10 +602,7 @@ def calc_T50(stage: pd.DataFrame)->float:
     '''
     For a stage in the experiment, returns the temperature at which 50% of the weight has been lost.
     '''
-    DTGA_col = [col for col in stage.columns if 'DTGA' in col]
-    if len(DTGA_col) == 0:
-        raise ValueError("No DTGA column found in stage")
-    T50 = stage['Sample Temp.'].loc[stage[DTGA_col[0]].sub(0.5).abs().idxmin()]
+    T50 = stage['Sample Temp.'].loc[stage['rel_weight_pwl'].sub(0.5).abs().idxmin()]
     return T50
 
 
