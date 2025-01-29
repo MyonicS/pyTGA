@@ -10,6 +10,7 @@ git clone https://github.com/MyonicS/pyTGA
 - install the package by **navigating to the cloned repository** in your python environment and executing the following command:
 
 ```
+pip install -r requirements.txt
 pip install -e .
 ```
 - You should now be able to load the package in python by using:
@@ -33,7 +34,22 @@ My_Scripts
 ```
 
 ## Usage
-Check the example notebook for how to use this package, documentantion to be extended. For parsing differences between Mettler Toledo and Perkin Elmer check the 'parsing' notebook.
+Parse a TGA file using 
+```python
+tga_exp = tga.parse_TGA('*path-to-your-file*')
+```
+Make a quick plot to check: 
+
+```python
+tga_exp.quickplot()
+```
+Access individual stages as pandas DataFrame:
+
+```python
+tga_exp.stages['stage1']
+```
+
+Check the example notebook for more info how to use this package, documentantion to be extended. For parsing differences between Mettler Toledo and Perkin Elmer check the 'parsing' notebook.
 
 ## Support
 If you find bugs or have other questions send me a message or open an issue.
