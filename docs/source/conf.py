@@ -50,10 +50,16 @@ language = 'English'
 
 html_theme = 'furo'
 html_static_path = ['_static']
+html_css_files = [
+    'custom.css',
+]
 html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
-        "light_css_variables": {
+    # Ensure the logo paths use the full path from static directory
+    "light_logo": "logo_v1.svg",
+    "dark_logo": "logo_v1_dark.svg",
+    "light_css_variables": {
         "color-brand-primary": "#c2389e",
         "color-background-secondary": "#f0fbff",
     },
@@ -65,5 +71,4 @@ html_theme_options = {
     },
 }
 
-# Logo
-html_logo = "_static/logo_v1.svg"
+# Logo settings are now handled by html_theme_options with light_logo and dark_logo
