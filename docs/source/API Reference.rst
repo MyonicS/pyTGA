@@ -1,4 +1,4 @@
-pyTGA
+API Reference
 =====
 
 .. toctree::
