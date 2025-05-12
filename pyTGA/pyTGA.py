@@ -20,6 +20,8 @@ class TGA_exp:
         A string containing the method used for the TGA experiment
     '''
     def __init__(self, stage_files=None):
+        self.date = None
+        self.time = None
         self.stages = {}
         self.method = None
         self.calibration = None
@@ -342,6 +344,14 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
         split = re.split(r'(\d+\) TGA)', text)
         section_numbers = [int(element[0:-5]) for element in split[1::2]]
         sections = split[2::2]
+        
+        # Extract date and time from the header
+        header = split[0]
+        date_time_match = re.search(r'Data Collected:\s+(\d+/\d+/\d+)\s+(\d+:\d+:\d+)', header)
+        if date_time_match:
+            tga_exp_instance.date = date_time_match.group(1)
+            tga_exp_instance.time = date_time_match.group(2)
+        
         try:
             calib = re.split(r'TEMPERATURE CALIBRATION INPUTS: ',split[-1])[1]
         except:
@@ -445,6 +455,13 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
 
     with open(filepath, encoding=result['encoding']) as full:
         text = full.read()
+        
+        # Extract date and time from the header
+        date_time_match = re.search(r'FileName:[\s\S]*?(\d{2}\.\d{2}\.\d{4})\s+(\d{2}:\d{2}:\d{2})', text)
+        if date_time_match:
+            tga_exp_instance.date = date_time_match.group(1)
+            tga_exp_instance.time = date_time_match.group(2)
+        
         split_text = text.split('Curve:')[1].split('LastKeyWD:')[0]
         original_columns = split_text.split('\n')[1].split()
         # in this case the original colum names are ['Index', 't', 'Ts', 'Tr', 'Value']

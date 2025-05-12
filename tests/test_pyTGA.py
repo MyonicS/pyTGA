@@ -31,3 +31,11 @@ def test_plastic_cracking_class():
     tga_exp.T50 = tga.calc_T50(tga_exp.cracking())
     assert tga_exp.Tmax == 245.0
     assert tga_exp.T50 == 230.89
+    assert tga_exp.date == '10/04/2023'
+    assert tga_exp.time == '08:20:41'
+
+def test_date_time_extraction_MT():
+    # Test Mettler Toledo date/time extraction
+    mt_exp = tga.parse_MT(os.path.join(testfiledir, 'MettlerToledo_example_file.txt'))
+    assert mt_exp.date == '01.01.2024'
+    assert mt_exp.time == '18:00:00'
