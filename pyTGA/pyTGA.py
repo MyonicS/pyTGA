@@ -607,12 +607,28 @@ def calc_T50(stage: pd.DataFrame)->float:
 
 
 def get_color(min_rel_weight,cmap='viridis'):
+    '''
+    Returns a color for the TGA plot based on the minimum relative weight.
+    Parameters:
+    ----------
+    min_rel_weight : float
+        The minimum relative weight of the sample
+    cmap : str
+        The colormap to use. Default is 'viridis'
+    Returns:
+    -------
+    color : tuple
+        The color for the TGA plot
+    '''
     norm = plt.Normalize(0, 1.07)
     color = plt.get_cmap(cmap)(norm(min_rel_weight))
     return color
 
 
 def get_coke_content(stage):
+    '''
+    For a stage in the experiment, returns the coke content as a fraction of the total weight.
+    '''
     catweight = stage['Unsubtracted weight'].min()
     cokeweight = stage['Unsubtracted weight'].max() - catweight
     return cokeweight/(catweight+cokeweight)
