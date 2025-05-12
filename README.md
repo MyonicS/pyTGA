@@ -1,6 +1,9 @@
 # pyTGA
+
 ## Description
 A simple python library for parsing and processing Thermogravimteric analysis (TGA) data. At the moment, .txt files from Perkin Elmer and Metteld Toledo are supported. Work in progress, if you got suggestions or request please submit an issue.
+
+> **⚠️ WARNING**: pyTGA is under active development. Braking changes can occur. Please report any issues using the [Issue Tracker](https://github.com/MyonicS/pyTGA/issues).
 
 ## Installation 
 - clone the repository:
@@ -62,7 +65,8 @@ If you find bugs or have other questions send me a message or open an issue.
 - [ ] improved docs
 
 ## Contributing
-If you want to contribute, the best way is to make a new experiment class, add it to the utils, and include an example in the example notebook.
+You can can suggest features or submit bug reports as issues. 
+PRs are more than welcome. If you have a question, get in touch.
 
 ## Authors
 Sebastian Rejman, Utrecht University
