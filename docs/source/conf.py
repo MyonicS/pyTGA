@@ -49,6 +49,11 @@ myst_enable_extensions = [
     "html_admonition",
     "html_image",
 ]
+
+# Line length settings
+# This affects .rst files rendering in the documentation
+rst_line_length = 100
+
 source_suffix = {
     '.rst': 'restructuredtext',
     '.md': 'markdown',
@@ -71,14 +76,14 @@ html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
     # Ensure the logo paths use the full path from static directory
-    "light_logo": "logo_v1.svg",
+    "light_logo": "logo_v1_bright_2.svg",
     "dark_logo": "logo_v1_dark.svg",
     "light_css_variables": {
-        "color-brand-primary": "#c2389e",
-        "color-background-secondary": "#f0fbff",
+        "color-brand-primary": "#151420",
+        "color-background-secondary": "#dfdfdf",
     },
     "dark_css_variables": {
-        "color-brand-primary": "#f4a900",
+        "color-brand-primary": "#ffffff",
         "color-background-primary": "#151420",
         "color-background-secondary": "#1a1d25",
         "color-admonition-background": "#190242",
