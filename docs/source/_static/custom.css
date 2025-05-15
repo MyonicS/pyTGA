@@ -1,3 +1,9 @@
 /* Custom styles for pyTGA documentation */
 
+/* Make the sidebar logo smaller */
+.sidebar-logo {
+    width: 150px !important; /* Set a specific width */
+    height: auto !important; /* Maintain aspect ratio */
+}
+
 /* Additional styles can be added here if needed */

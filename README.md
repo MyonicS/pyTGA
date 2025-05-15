@@ -1,8 +1,16 @@
 # pyTGA
+<!---
+<p align="center">
+  <img src="https://raw.githubusercontent.com/MyonicS/pyTGA/main/docs/source/_static/logo_v1_dark.svg" alt="pyTGA logo" width="200"/>
+</p>
+-->
 
 <p align="center">
-  <img src="docs/source/_static/logo_v1_dark.svg" alt="pyGCxGC Logo" width="200"/>
+  <img src="docs/source/_static/logo_v1_bright_2.svg" alt="pyTGA logo" width="200"/>
 </p>
+
+
+
 
 ## Description
 A simple python library for parsing and processing Thermogravimteric analysis (TGA) data. At the moment, .txt files from Perkin Elmer and Metteld Toledo are supported. Work in progress, if you got suggestions or request please submit an issue.
