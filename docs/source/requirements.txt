@@ -1,6 +1,7 @@
 # Requirements for building the documentation on Read the Docs
 sphinx
 sphinx_rtd_theme
+furo
 nbsphinx
 ipython
 ipykernel

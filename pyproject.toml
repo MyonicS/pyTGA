@@ -51,4 +51,3 @@ Documentation = "https://your-docs-url.com"
 [tool.pylance]
 typeCheckingMode = "off"
 
-# Removed [project.badges] section as it is not supported by setuptools
