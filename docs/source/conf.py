@@ -49,6 +49,11 @@ myst_enable_extensions = [
     "html_admonition",
     "html_image",
 ]
+
+# Line length settings
+# This affects .rst files rendering in the documentation
+rst_line_length = 100
+
 source_suffix = {
     '.rst': 'restructuredtext',
     '.md': 'markdown',

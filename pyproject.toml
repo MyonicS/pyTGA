@@ -49,5 +49,8 @@ Homepage = "https://github.com/MyonicS/pyTGA"
 Documentation = "https://your-docs-url.com"
 
 [tool.pylance]
+
+[tool.black]
+line-length = 100  # You can adjust this value to your preferred line length
 typeCheckingMode = "off"
 
