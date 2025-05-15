@@ -1,6 +1,58 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = [
+    "setuptools",
+    "wheel",
+    "build",
+    "twine"
+]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyTGA"
+version = "0.1.0"
+description = "A Python package for parsing and analyzing Thermogravimetric Analysis (TGA) data."
+authors = [
+    { name = "Sebastian Rejman", email = "s.rejman@uu.nl" }
+]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "pandas",
+    "scipy",
+    "chardet"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov"
+]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "flake8"
+]
+
+[project.urls]
+Homepage = "https://github.com/MyonicS/pyTGA"
+Documentation = "https://your-docs-url.com"
 
 [tool.pylance]
 typeCheckingMode = "off"
+
+# Badges
+[project.badges]
+github-actions = { image = "https://github.com/MyonicS/pyTGA/actions/workflows/test.yml/badge.svg", url = "https://github.com/MyonicS/pyTGA/actions" }
+codecov = { image = "https://codecov.io/gh/MyonicS/pyTGA/branch/main/graph/badge.svg", url = "https://codecov.io/gh/MyonicS/pyTGA" }
