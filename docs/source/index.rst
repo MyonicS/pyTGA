@@ -16,13 +16,12 @@
    :caption: Quickstart:
 
    installation
-   quickstart
+   notebooks/example_Notebook
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   overview.md
    usage
    examples
    contributing
