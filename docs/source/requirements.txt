@@ -1,0 +1,12 @@
+# Requirements for building the documentation on Read the Docs
+sphinx
+sphinx_rtd_theme
+nbsphinx
+ipython
+ipykernel
+myst-parser
+pandas
+numpy
+matplotlib
+scipy
+chardet
