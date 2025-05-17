@@ -4,6 +4,10 @@ current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
 
+# Set matplotlib to use non-interactive backend for testing
+import matplotlib
+matplotlib.use('Agg')  # Use the 'Agg' backend which doesn't require a display
+
 import pyTGA as tga
 
 
@@ -39,3 +43,24 @@ def test_date_time_extraction_MT():
     mt_exp = tga.parse_MT(os.path.join(testfiledir, 'MettlerToledo_example_file.txt'))
     assert mt_exp.date == '01.01.2024'
     assert mt_exp.time == '18:00:00'
+
+
+    
+def test_quickplot():
+    # Test with Perkin Elmer data
+    tga_exp_pe = tga.parse_TGA(os.path.join(testfiledir, 'PerkinElmer_example_file.txt'))
+    fig_pe = tga.quickplot(tga_exp_pe, show=False)
+    assert fig_pe is not None
+    
+    # Test with Mettler Toledo data
+    tga_exp_mt = tga.parse_TGA(os.path.join(testfiledir, 'MettlerToledo_example_file.txt'))
+    fig_mt = tga.quickplot(tga_exp_mt, show=False)
+    assert fig_mt is not None
+    
+    # Test with a TGA experiment with no full data
+    tga_exp_no_full = tga.parse_TGA(os.path.join(testfiledir, 'PerkinElmer_example_file.txt'))
+    tga_exp_no_full.full = None
+    fig_no_full = tga.quickplot(tga_exp_no_full, show=False)
+    assert fig_no_full is not None
+    assert 'full' in tga_exp_no_full.stages
+
