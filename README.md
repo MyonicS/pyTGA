@@ -6,13 +6,43 @@
 
 
 ## Description
-A simple python library for parsing and processing Thermogravimteric analysis (TGA) data. At the moment, .txt files from Perkin Elmer and Metteld Toledo are supported. Work in progress, if you got suggestions or request please submit an issue.
+A simple python library for parsing and processing Thermogravimetric analysis (TGA) data. At the moment, .txt files from Perkin Elmer and Mettler Toledo are supported. Work in progress, if you have suggestions or requests please submit an issue.
 
 [![Test Status](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml/badge.svg)](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml)
 
-> **⚠️ WARNING**: pyTGA is under active development. Braking changes can occur. Please report any issues using the [Issue Tracker](https://github.com/MyonicS/pyTGA/issues).
+> **⚠️ WARNING**: pyTGA is under active development. Breaking changes can occur. Please report any issues using the [Issue Tracker](https://github.com/MyonicS/pyTGA/issues).
 
-## Installation 
+## Getting started
+
+### New to python and want to use pyTGA?
+<details>
+<summary><b>Here is a quick guide:</b> (Click to expand)</summary>
+
+#### Install a distribution
+The easiest way to get started with Python for scientific computing is with [Anaconda](https://www.anaconda.com/download/):
+- Includes Python, package manager, and many scientific libraries
+- Provides a user-friendly interface (Anaconda Navigator)
+- Comes with Jupyter Notebook for interactive analysis
+- Handles most dependencies automatically
+
+#### Install a code editor
+To be able to write and run code, you should use a code editor such as
+- [VS Code](https://code.visualstudio.com/) - a free, open-source editor with excellent Python support
+- [Spyder](https://www.spyder-ide.org/) - a scientific environment designed for Python
+
+#### Learn the basics
+There are plenty of online tutorials availible. Here are some recommendations:
+- [Boot.dev](https://www.boot.dev/)
+- [sololearn](https://www.sololearn.com/en/)
+
+#### Learn about the most important libraries
+For many applications in science, you wont need much more than these 3 libraries:
+- [NumPy](https://numpy.org/) - fundamental package for scientific computing in Python
+- [pandas](https://pandas.pydata.org/) - data analysis and manipulation library
+- [Matplotlib](https://matplotlib.org/) - comprehensive library for plotting
+</details>
+
+### Installation 
 - clone the repository:
 ```
 git clone https://github.com/MyonicS/pyTGA
@@ -29,26 +59,12 @@ pip install -e .
 import pyTGA as tga
 ```
 
-## Installation (simplest version)
-- Download the repository. 
-- Copy the *py_TGA* folder to the folder where the script you wanna use for analysis is located. Example:
-
-```
-My_Scripts
-│
-└───TGA
-│   │   myTGA_analysis.py
-│   │   myTGA_notebook.ipynb
-│   │
-│   └───*pyTGA*
-```
-
 ## Usage
 Parse a TGA file using 
 ```python
 tga_exp = tga.parse_TGA('*path-to-your-file*')
 ```
-Make a quick plot to check: 
+Use the .quickplot method to have a first look at your data: 
 
 ```python
 tga_exp.quickplot()
@@ -58,25 +74,34 @@ Access individual stages as pandas DataFrame:
 ```python
 tga_exp.stages['stage1']
 ```
+Access the data of the whole experiment:
 
-Check the example notebook for more info how to use this package, documentantion to be extended. For parsing differences between Mettler Toledo and Perkin Elmer check the 'parsing' notebook.
+```python
+tga_exp.full
+```
+To get started, check out the 'Quickstart' notebook [here](https://pytga.readthedocs.io/en/latest/notebooks/example_Notebook.html).
 
-## Support
-If you find bugs or have other questions send me a message or open an issue.
+## Documentation
+
+Full documentation of the package, including example use cases is availible [here](https://pytga.readthedocs.io/).
+
+You can also download example notebooks from the repository [here](https://github.com/MyonicS/pyTGA/tree/main/docs/source/notebooks) using [example data](https://github.com/MyonicS/pyTGA/tree/main/example_data).
+
 
 ## Roadmap
-- [ ] Support for more manufacturers
-- [ ] Muliple notebooks for specific usecases like kinetics
-- [ ] Improved test coverage
-- [ ] Publication on PyPI
-- [ ] improved docs
+- Support for more manufacturers
+- Multiple notebooks for specific use cases like kinetics
+- Improved test coverage
+
 
 ## Contributing
-You can can suggest features or submit bug reports as issues. 
-PRs are more than welcome. If you have a question, get in touch.
+Contributions are more than welcome!
+The easiest way to contribute is to suggest new features as an issue.
+If you want to contribute code or add to the documentation, fork the repository, implement your changes and submit a pull request.
+If you have a question, get in touch.
 
 ## Authors
 Sebastian Rejman, Utrecht University
 
-
+## 
 

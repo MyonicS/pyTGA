@@ -13,16 +13,21 @@
 
 .. toctree::
    :maxdepth: 2
-   :caption: Quickstart:
+   :caption: Getting Started:
 
    installation
    notebooks/example_Notebook
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Resources:
 
-   usage
+   manual
    examples
-   contributing
    API Reference
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Development:
+
+   contributing
