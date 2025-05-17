@@ -30,6 +30,7 @@ class TGA_exp:
             for stage, file in stage_files.items():
                 data = pd.read_csv(file)
                 self.add_stage(stage, data)
+        self.full = None
 
     def add_stage(self, stage, data):
         '''
@@ -370,11 +371,16 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
     #remove the last 45 rows of the last stage as they contain the calibration information
     tga_exp_instance.stages['stage'+str(section_numbers[-1])] = tga_exp_instance.stages['stage'+str(section_numbers[-1])].iloc[:-45]
 
+    # Combine the stages into a full stage
+    tga_exp_instance.full = pd.concat([tga_exp_instance.stages[stage_name] for stage_name in tga_exp_instance.stage_names() if 'stage' in stage_name])
+
+
     if calculate_DTGA == True:
         if exp_type != 'pyro':
             raise Exception('DTGA calculation only implemented for pyro')
         elif exp_type == 'pyro':
             return calc_DTGA_pyro(tga_exp_instance)
+        
     else:
         return tga_exp_instance
 
@@ -475,6 +481,9 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
         
         # for PE TGAs (the daufault) the time is in minutes, not seconds. Adjusting for consistency
         frame['Time'] = frame['Time']/60
+
+        #adding full
+        tga_exp_instance.full = frame
 
         # splitting the stages. Either with a csv file (see example for formatting)
         if type(stage_split) == str:
@@ -651,18 +660,38 @@ def get_coke_content(stage):
     return cokeweight/(catweight+cokeweight)
 
 
-def quickplot(tga_exp):
+def quickplot(tga_exp, show=True):
     '''
     Generates a simple plot of the TGA data with time as x axis and weight and temperature as y axes.
+    Uses the full data if available, otherwise combines stages to create it.
+    
+    Parameters
+    ----------
+    tga_exp : TGA_experiment
+        The TGA experiment object to plot
+    show : bool, optional
+        Whether to display the plot, default True. Set to False for testing.
+    
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the plot
     '''
-    tga_exp.combine_stages('all', 'full')
+    # If full data doesn't exist yet, create it
+    if tga_exp.full is None:
+        tga_exp.combine_stages('all', 'full')
+        full_data = tga_exp.stages['full']
+    else:
+        full_data = tga_exp.full
+        
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
-    ax.plot(tga_exp.stages['full']['Time'],tga_exp.stages['full']['Unsubtracted weight'])
-    ax2.plot(tga_exp.stages['full']['Time'],tga_exp.stages['full']['Sample Temp.'],linestyle='--')
+    ax.plot(full_data['Time'], full_data['Unsubtracted weight'])
+    ax2.plot(full_data['Time'], full_data['Sample Temp.'], linestyle='--')
     ax.set_xlabel('Time (min)')
     ax.set_ylabel('Sample weight (mg)')
     ax2.set_ylabel('Temperature (°C)')
-    ax.set_xlim(0,tga_exp.stages['full']['Time'].max())
-    plt.show()
-    
+    ax.set_xlim(0, full_data['Time'].max())
+    if show:
+        plt.show()
+    return fig
