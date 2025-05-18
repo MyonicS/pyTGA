@@ -31,3 +31,4 @@
    :caption: Development:
 
    contributing
+   changelog
