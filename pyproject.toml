@@ -1,27 +1,25 @@
 [build-system]
 requires = [
-    "setuptools",
-    "wheel",
-    "build",
-    "twine"
+    "setuptools>=42",
+    "wheel"
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyTGA"
-version = "0.1.0"
-description = "A Python package for parsing and analyzing Thermogravimetric Analysis (TGA) data."
+version = "0.1.1dev0"
+description = "A simple python library for parsing and processing Thermogravimetric analysis (TGA) data."
 authors = [
     { name = "Sebastian Rejman", email = "s.rejman@uu.nl" }
 ]
-license = { file = "LICENSE" }
+
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -31,6 +29,9 @@ dependencies = [
     "scipy",
     "chardet"
 ]
+
+[tool.setuptools]
+packages = ["pyTGA"]
 
 [project.optional-dependencies]
 test = [
@@ -46,11 +47,10 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/MyonicS/pyTGA"
-Documentation = "https://your-docs-url.com"
-
-[tool.pylance]
+Documentation = "https://pytga.readthedocs.io"
 
 [tool.black]
-line-length = 100  # You can adjust this value to your preferred line length
+line-length = 100
 typeCheckingMode = "off"
 
+[tool.pylance]
