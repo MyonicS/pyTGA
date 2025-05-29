@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyTGA"
-version = "0.1.1dev0"
+version = "0.1.1dev1"
 description = "A simple python library for parsing and processing Thermogravimetric analysis (TGA) data."
 authors = [
     { name = "Sebastian Rejman", email = "s.rejman@uu.nl" }

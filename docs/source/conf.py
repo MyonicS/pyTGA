@@ -16,8 +16,13 @@ sys.path.insert(0, os.path.abspath('../..'))
 project = 'pyTGA'
 copyright = '2025, Sebastian Rejman'
 author = 'Sebastian Rejman'
-version = '0.1.0'
-release = '0.1.0'
+try:
+    from importlib.metadata import version
+    version = version("pyTGA")
+    release = version
+except ImportError:
+    version = '0.1.0'
+    release = '0.1.0'
 
 
 # Configure autodoc

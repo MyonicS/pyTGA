@@ -43,23 +43,33 @@ For many applications in science, you wont need much more than these 3 libraries
 </details>
 
 ### Installation 
-- clone the repository:
+Install directly from TestPyPI:
+```
+pip install -i https://test.pypi.org/simple/ pyTGA
+```
+
+### Development installation
+If you want to install the development version:
+
+- Clone the repository:
 ```
 git clone https://github.com/MyonicS/pyTGA
 ```
-- install the package by **navigating to the cloned repository** in your python environment and executing the following command:
+- Install the package in development mode with dev dependencies by **navigating to the cloned repository** in your python environment and executing:
 
 ```
-pip install -r requirements.txt
-pip install -e .
+pip install -e .[dev]
 ```
-- You should now be able to load the package in python by using:
 
+
+
+## Usage
+
+Import the package 
 ```python
 import pyTGA as tga
 ```
 
-## Usage
 Parse a TGA file using 
 ```python
 tga_exp = tga.parse_TGA('*path-to-your-file*')
@@ -103,5 +113,4 @@ If you have a question, get in touch.
 ## Authors
 Sebastian Rejman, Utrecht University
 
-## 
 
