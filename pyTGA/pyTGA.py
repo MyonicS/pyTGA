@@ -26,6 +26,16 @@ class TGA_exp:
         self.method = None
         self.calibration = None
         self.manufacturer = None
+
+        self.default_weight: None | str = None
+        self.default_temp: None | str = None
+        self.default_time: None | str = None
+
+        self.time_unit = 'min'  # Default time unit is minutes
+        self.weight_unit = 'mg'  # Default weight unit is milligrams
+        self.temp_unit = '°C'  # Default temperature unit is degrees Celsius
+
+
         if stage_files is not None:
             for stage, file in stage_files.items():
                 data = pd.read_csv(file)
@@ -73,11 +83,11 @@ class TGA_exp:
         # check if the temperature range is valid
         if len(temp_range) != 2:
             raise ValueError("temp_range must contain two values")
-        if max(temp_range) > self.stages[stage]['Sample Temp.'].max():
-            raise ValueError("upper bound of temp_range is greater than the maximum temperature in the stage. The max temp in the stage is: "+ str(self.stages[stage]['Sample Temp.'].max()))
-        if min(temp_range) < self.stages[stage]['Sample Temp.'].min():
-            raise ValueError("lower bound of temp_range is less than the minimum temperature in the stage. The min temp in the stage is: " + str(self.stages[stage]['Sample Temp.'].min()))
-        self.stages[stage] = self.stages[stage][(self.stages[stage]['Sample Temp.'] >= min(temp_range)) & (self.stages[stage]['Sample Temp.'] <= max(temp_range))].reset_index()
+        if max(temp_range) > self.stages[stage][self.default_temp].max():
+            raise ValueError("upper bound of temp_range is greater than the maximum temperature in the stage. The max temp in the stage is: "+ str(self.stages[stage][self.default_temp].max()))
+        if min(temp_range) < self.stages[stage][self.default_temp].min():
+            raise ValueError("lower bound of temp_range is less than the minimum temperature in the stage. The min temp in the stage is: " + str(self.stages[stage][self.default_temp].min()))
+        self.stages[stage] = self.stages[stage][(self.stages[stage][self.default_temp] >= min(temp_range)) & (self.stages[stage][self.default_temp] <= max(temp_range))].reset_index()
     def add_method(self, method):
         self.method = method
 
@@ -311,6 +321,11 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
     # setting the manufacturer
     tga_exp_instance.manufacturer = 'Perkin Elmer'
 
+    # default column names for the TGA data
+    tga_exp_instance.default_weight = 'Unsubtracted weight'
+    tga_exp_instance.default_temp = 'Sample Temp.'
+    tga_exp_instance.default_time = 'Time'
+
     names = ['Blank', 'Time', 'Unsubtracted weight', 'Baseline weight',
             'Program Temp.', 'Sample Temp.', 'Sample Purge Flow',
             'Balance purge flow']
@@ -458,6 +473,16 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
     # setting the manufacturer
     tga_exp_instance.manufacturer = 'Mettler Toledo'
 
+    # default column names for the TGA data
+    if rename_columns:
+        tga_exp_instance.default_weight = 'Weight'
+        tga_exp_instance.default_temp = 'Sample Temp.'
+        tga_exp_instance.default_time = 'Time(min)'
+    else:
+        tga_exp_instance.default_weight = 'Value'
+        tga_exp_instance.default_temp = 'Ts'
+        tga_exp_instance.default_time = 't'
+
 
     with open(filepath, encoding=result['encoding']) as full:
         text = full.read()
@@ -470,17 +495,18 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
         
         split_text = text.split('Curve:')[1].split('LastKeyWD:')[0]
         original_columns = split_text.split('\n')[1].split()
+
         # in this case the original colum names are ['Index', 't', 'Ts', 'Tr', 'Value']
         # where t is the time in s, Ts is the sample temperature, Tr is the chamber temperature and Value is the weight in mg
         # for consistence, the columns are renamed by defualt
         if rename_columns:
-            column_names = ['Index', 'Time', 'Sample Temp.', 'Reactor Temp.', 'Unsubtracted weight']
+            column_names = ['Index', 'Time', 'Sample Temp.', 'Reactor Temp.', 'Weight']
         else:
             column_names = original_columns
         frame = pd.read_table(io.StringIO(split_text),delimiter=r'\s+',header=None,skiprows=3,engine='python',names=column_names, index_col='Index')
         
         # for PE TGAs (the daufault) the time is in minutes, not seconds. Adjusting for consistency
-        frame['Time'] = frame['Time']/60
+        frame['Time(min)'] = frame['Time']/60
 
         #adding full
         tga_exp_instance.full = frame
@@ -544,18 +570,21 @@ def calc_DTGA_stage(tga_exp: TGA_exp, stage_name: str,x = 'Temp',y='relative',av
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        stage = tga_exp.get_stage(stage_name)
+        if stage_name == 'full':
+            stage = tga_exp.full
+        else:
+            stage = tga_exp.get_stage(stage_name)
         if x == 'Time':
-            dx = stage['Time'].to_numpy()
+            dx = stage[tga_exp.default_time].to_numpy()
         elif x == 'Temp':
-            dx = stage['Sample Temp.'].to_numpy()
+            dx = stage[tga_exp.default_temp].to_numpy()
         else:
             raise ValueError("x must be 'Time' or 'Temp'")
         
         if y == 'relative':
-            dy = (stage['Unsubtracted weight']/stage['Unsubtracted weight'].max()).to_numpy()
+            dy = (stage[tga_exp.default_weight]/stage[tga_exp.default_weight].max()).to_numpy()
         elif y == 'absolute':
-            dy = stage['Unsubtracted weight'].to_numpy()
+            dy = stage[tga_exp.default_weight].to_numpy()
         else:
             raise ValueError("y must be 'relative' or 'absolute'")
 
@@ -574,6 +603,7 @@ def combine_stages(tga_exp: TGA_exp, stage_names, new_stage_name: str)->TGA_exp:
         The TGA_exp object
     stage_names : list or 'all'
         The names of the stages to combine, e.g. ['stage1', 'stage2']
+        Use 'all' to combine all base stages in the experiment including the label 'stage'.
     new_stage_name : str
         The name of the new stage e.g. 'full'
     """
@@ -590,7 +620,7 @@ def trim_stage(tga_exp: TGA_exp, stage_name: str, min_temp: float, max_temp: flo
     Trim a stage in a TGA_exp object to a specified temperature range
     """
     stage = tga_exp.get_stage(stage_name)
-    stage = stage[(stage['Sample Temp.'] >= min_temp) & (stage['Sample Temp.'] <= max_temp)]
+    stage = stage[(stage[tga_exp.default_temp] >= min_temp) & (stage[tga_exp.default_temp] <= max_temp)]
     tga_exp.add_stage(stage_name, stage)
     return tga_exp
 
@@ -600,20 +630,8 @@ def calc_Tmax_exp(tga_exp,stage='cracking'):
         stage_select = tga_exp.cracking()
     elif stage == 'burnoff':
         stage_select = tga_exp.burnoff()
-    Tmax = stage_select['Sample Temp.'].loc[stage_select['DTGA_twl'].idxmax()]
+    Tmax = stage_select[tga_exp.default_temp].loc[stage_select['DTGA_twl'].idxmax()]
     return Tmax
-
-def calc_Tmax(stage):
-    '''
-    For a stage in the experiment, returns the temperature at which the derivative of the TGA curve is max.
-    '''
-    #find which column contaions 'DTGA'
-    DTGA_col = [col for col in stage.columns if 'DTGA' in col]
-    if len(DTGA_col) == 0:
-        raise ValueError("No DTGA column found in stage")
-    Tmax = stage['Sample Temp.'].loc[stage[DTGA_col[0]].idxmax()]
-    return Tmax
-
 
 
 def calc_T50_old(tga_exp,stage='cracking'):
@@ -621,43 +639,8 @@ def calc_T50_old(tga_exp,stage='cracking'):
         stage_select = tga_exp.cracking()
     elif stage == 'burnoff':
         stage_select = tga_exp.burnoff()
-    T50 = stage_select['Sample Temp.'].loc[stage_select['rel_weight_pwl'].sub(0.5).abs().idxmin()]
+    T50 = stage_select[tga_exp.default_temp].loc[stage_select['rel_weight_pwl'].sub(0.5).abs().idxmin()]
     return T50
-
-def calc_T50(stage: pd.DataFrame)->float:
-    '''
-    For a stage in the experiment, returns the temperature at which 50% of the weight has been lost.
-    '''
-    T50 = stage['Sample Temp.'].loc[stage['rel_weight_pwl'].sub(0.5).abs().idxmin()]
-    return T50
-
-
-def get_color(min_rel_weight,cmap='viridis'):
-    '''
-    Returns a color for the TGA plot based on the minimum relative weight.
-    Parameters:
-    ----------
-    min_rel_weight : float
-        The minimum relative weight of the sample
-    cmap : str
-        The colormap to use. Default is 'viridis'
-    Returns:
-    -------
-    color : tuple
-        The color for the TGA plot
-    '''
-    norm = plt.Normalize(0, 1.07)
-    color = plt.get_cmap(cmap)(norm(min_rel_weight))
-    return color
-
-
-def get_coke_content(stage):
-    '''
-    For a stage in the experiment, returns the coke content as a fraction of the total weight.
-    '''
-    catweight = stage['Unsubtracted weight'].min()
-    cokeweight = stage['Unsubtracted weight'].max() - catweight
-    return cokeweight/(catweight+cokeweight)
 
 
 def quickplot(tga_exp, show=True):
@@ -686,12 +669,75 @@ def quickplot(tga_exp, show=True):
         
     fig, ax = plt.subplots()
     ax2 = ax.twinx()
-    ax.plot(full_data['Time'], full_data['Unsubtracted weight'])
-    ax2.plot(full_data['Time'], full_data['Sample Temp.'], linestyle='--')
-    ax.set_xlabel('Time (min)')
-    ax.set_ylabel('Sample weight (mg)')
-    ax2.set_ylabel('Temperature (°C)')
-    ax.set_xlim(0, full_data['Time'].max())
+    ax.plot(full_data[tga_exp.default_time], full_data[tga_exp.default_weight], label='Sample weight', color='tab:blue')
+    ax2.plot(full_data[tga_exp.default_time], full_data[tga_exp.default_temp], linestyle='--')
+    ax.set_xlabel('Time ({})'.format(tga_exp.time_unit))
+    ax2.set_xlabel('Time ({})'.format(tga_exp.time_unit))
+    ax.set_ylabel('Sample weight ({})'.format(tga_exp.weight_unit))
+    ax2.set_ylabel('Temperature ({})'.format(tga_exp.temp_unit))
+    ax.set_xlim(0, full_data[tga_exp.default_time].max())
     if show:
         plt.show()
     return fig
+
+
+
+# Functions applying to stages:---------------------------------------------------------------
+# Making these functions apply to stages for different file  formats is not ideally implemented. It might be refactored offer more convenience.
+
+def calc_Tmax(stage, temp_col='Sample Temp.'):
+    '''
+    For a stage in the experiment, returns the temperature at which the derivative of the TGA curve is max.
+    '''
+    if not isinstance(stage, pd.DataFrame):
+        raise ValueError("stage must be a pandas DataFrame")
+    if temp_col not in stage.columns:
+        raise ValueError(f"temp_col '{temp_col}' not found in stage columns and must be specified manually from {stage.columns}")
+
+    #find which column contaions 'DTGA'
+    DTGA_col = [col for col in stage.columns if 'DTGA' in col]
+    if len(DTGA_col) == 0:
+        raise ValueError("No DTGA column found in stage")
+    Tmax = stage[temp_col].loc[stage[DTGA_col[0]].idxmax()]
+    return Tmax
+
+
+def calc_T50(stage: pd.DataFrame)->float:
+    '''
+    For a stage in the experiment, returns the temperature at which 50% of the weight has been lost.
+    '''
+    if 'Sample Temp.' not in stage.columns or 'rel_weight_pwl' not in stage.columns:
+        raise ValueError("stage must contain 'Sample Temp.' and 'rel_weight_pwl' columns")
+    T50 = stage['Sample Temp.'].loc[stage['rel_weight_pwl'].sub(0.5).abs().idxmin()]
+    return T50
+
+
+def get_color(min_rel_weight,cmap='viridis'):
+    '''
+    Returns a color for the TGA plot based on the minimum relative weight.
+    Parameters:
+    ----------
+    min_rel_weight : float
+        The minimum relative weight of the sample
+    cmap : str
+        The colormap to use. Default is 'viridis'
+    Returns:
+    -------
+    color : tuple
+        The color for the TGA plot
+    '''
+    norm = plt.Normalize(0, 1.07)
+    color = plt.get_cmap(cmap)(norm(min_rel_weight))
+    return color
+
+
+def get_coke_content(stage, weight_col='Unsubtracted weight'):
+    '''
+    For a stage in the experiment, returns the coke content as a fraction of the total weight.
+    '''
+    if weight_col not in stage.columns:
+        raise ValueError(f"weight_col '{weight_col}' not found in stage columns and must be specified manually from {stage.columns}")
+    
+    catweight = stage[weight_col].min()
+    cokeweight = stage[weight_col].max() - catweight
+    return cokeweight/(catweight+cokeweight)
