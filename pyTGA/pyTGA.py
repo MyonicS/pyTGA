@@ -18,6 +18,44 @@ class TGA_exp:
         A dictionary containing the stages of the TGA experiment
     method : str
         A string containing the method used for the TGA experiment
+    calibration : str
+        A string containing the calibration information for the TGA experiment
+
+    manufacturer : str
+        A string containing the manufacturer of the TGA machine
+    details :
+        Additional metadata of the TGA experiment, only read for TA Instruments Excel files.
+
+    default_weight : str
+        The default column name for the weight data
+    default_temp : str
+        The default column name for the temperature data
+    default_time : str
+        The default column name for the time data
+    time_unit : str
+        The unit of time used in the TGA experiment, default is 'min'
+    weight_unit : str
+        The unit of weight used in the TGA experiment, default is 'mg'
+    temp_unit : str
+        The unit of temperature used in the TGA experiment, default is '°C'
+
+    Methods
+    -------
+    add_stage(stage_name, data)
+        Adds a stage to the TGA experiment
+    get_stage(stage)
+        Returns the data for a specific stage
+    stage_names()
+        Returns the names of the stages
+    trim_stage(stage, temp_range)
+        Trims a stage to a specified temperature range
+    add_method(method)
+        Adds a method to the TGA experiment
+    combine_stages(stage_names, new_stage_name='comb_stage')
+        Combines a list of stages in the TGA experiment into a new stage
+    quickplot()
+        Generates a simple plot of the TGA data with time as x axis and weight and temperature as y axes.
+        Uses the full data if available, otherwise combines stages to create it.
     '''
     def __init__(self, stage_files=None):
         self.date = None
@@ -26,6 +64,7 @@ class TGA_exp:
         self.method = None
         self.calibration = None
         self.manufacturer = None
+        self.details = None
 
         self.default_weight: None | str = None
         self.default_temp: None | str = None
@@ -42,7 +81,7 @@ class TGA_exp:
                 self.add_stage(stage, data)
         self.full = None
 
-    def add_stage(self, stage, data):
+    def add_stage(self, stage_name, data):
         '''
         Adds a stage to the TGA experiment
         ----------
@@ -52,7 +91,7 @@ class TGA_exp:
         '''
         if not isinstance(data, pd.DataFrame):
             raise ValueError("Data must be a pandas DataFrame")
-        self.stages[stage] = data
+        self.stages[stage_name] = data
 
     def get_stage(self, stage):
         '''
@@ -70,9 +109,6 @@ class TGA_exp:
         return list(self.stages.keys())
     
     def trim_stage(self, stage: str, temp_range: list):
-        '''
-        Trim a stage to a specified temperature range.
-        '''
         '''
         Trims a stage to a specified temperature range
         ----------
@@ -102,6 +138,8 @@ class TGA_exp:
             stage_names = stage_names
         new_stage = pd.concat([self.get_stage(stage_name) for stage_name in stage_names])
         self.add_stage(new_stage_name, new_stage)
+
+
     def quickplot(self):
         quickplot(self)
 
@@ -228,19 +266,27 @@ class TGA_pyro_iso(TGA_exp):
 
 def infer_manufacturer(filepath):
     '''
-    Infers the manufacturer of the manufacturer, returns 'Perkin Elmer' or 'Mettler Toledo' 
+    Infers the manufacturer of the TGA file.
+    Returns 'Perkin Elmer', 'Mettler Toledo', or 'TA Instruments (Excel)'
     '''
-    with open(filepath, 'rb') as file:
-        result = chardet.detect(file.read(10000))
-
-    with open(filepath, encoding=result['encoding']) as file:
-        first_line = file.readline()
-        if first_line[0:8] == 'Filename':
-            return 'Perkin Elmer'
-        elif first_line[0:5] == 'Title':
-            return 'Mettler Toledo'
-        else:
-            raise ValueError('File format not recognized')
+    # Check if file is an Excel file based on extension
+    file_extension = os.path.splitext(filepath)[1].lower()
+    if file_extension in ['.xlsx', '.xls']:
+        return 'TA Instruments (Excel)'
+    
+    # For text files, check content
+    else:
+        with open(filepath, 'rb') as file:
+            result = chardet.detect(file.read(10000))
+    
+        with open(filepath, encoding=result['encoding']) as file:
+            first_line = file.readline()
+            if first_line[0:8] == 'Filename':
+                return 'Perkin Elmer'
+            elif first_line[0:5] == 'Title':
+                return 'Mettler Toledo'
+            else:
+                raise ValueError('File format not recognized')
 
 def parse_TGA(filepath, manufacturer='infer', **kwargs):
     '''
@@ -288,9 +334,13 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
         return parse_PE(filepath, **kwargs)
     elif manufacturer == 'Mettler Toledo':
         return parse_MT(filepath, **kwargs)
+    elif manufacturer == 'TA Instruments (Excel)':
+        return parse_TA_excel(filepath, **kwargs)
     else:
         raise ValueError("manufacturer must be 'Perkin Elmer' or 'Mettler Toledo'")
-
+    
+# Parsing    
+## Perkin Elmer
 def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type can be 'general' or 'pyro'
     '''
     Parses a perkin Elmer ASCII TGA file and returns a TGA_exp object
@@ -426,7 +476,7 @@ parse_PE = parse_txt
 #             stage['DTGA_twl']=stage['DTGA_twl'].rolling(avering_window,win_type='triang').mean()
 #     return tga_exp
 
-#Functions----------------------------------------------------------------------------------------------------------------
+## # Mettler Toledo
 def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= None, calculate_DTGA = False):
     '''
     Parses a Mettler Toldeo TGA file and returns a TGA_exp object
@@ -533,6 +583,93 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
             return tga_exp_instance
 
 
+def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type can be 'general' or 'pyro'
+    '''
+    Parses a TA Instruments excel TGA file and returns a TGA_exp object
+
+    Parameters
+    ----------
+    filepath : str
+        The path to the TGA file
+    exp_type : str
+        The type of TGA experiment. Must be 'general', 'pyro' or 'pyro_iso'. Default is 'general'
+        Presently only 'general' is supported for this format
+    calculate_DTGA : bool
+        Whether to calculate the derivative of the TGA curve. Default is False
+        Currently not supported for TA Instruments.
+
+    Returns
+    -------
+    TGA_exp
+        The TGA_exp object
+    '''
+    if exp_type == 'general':
+        tga_exp_instance = TGA_exp()  # Create an instance of TGA_exp
+    elif exp_type == 'pyro':
+        raise NotImplementedError("pyro class not implemented for TA Instruments TGA files")
+        #tga_exp_instance = TGA_pyro()
+    elif exp_type == 'pyro_iso':
+        raise NotImplementedError("pyro_iso class not implemented for TA Instruments TGA files")
+        #tga_exp_instance = TGA_pyro_iso()  
+    else:
+        raise ValueError("only 'general' is supported for TA Instruments TGA files")
+    
+    # setting the manufacturer
+    tga_exp_instance.manufacturer = 'TA Instruments (Excel)'
+
+    # default column names for the TGA data
+    tga_exp_instance.default_temp = 'Temperature (C)'
+    tga_exp_instance.default_weight = 'Weight (mg)'
+    tga_exp_instance.default_time = 'Time (min)'
+
+    # parsing
+    excel = pd.ExcelFile(filepath)
+    stage_names = excel.sheet_names
+    details = pd.read_excel(excel, sheet_name=stage_names[0], header=None, names=['label', 'value'], index_col=0)
+
+    # adding metadata
+    tga_exp_instance.details = details
+    tga_exp_instance.date = details.loc['rundate']['value'].date()
+    tga_exp_instance.time = details.loc['rundate']['value'].time() 
+    tga_exp_instance.extra = details
+
+
+    def read_TA_stage(excel: pd.ExcelFile, stage_name: str) -> pd.DataFrame:
+        """Read a stage from the TA instrument excel file."""
+        return pd.read_excel(excel, sheet_name=stage_name, skiprows=3, names=['Time (min)', 'Temperature (C)', 'Weight (mg)', 'Weight (%)'])
+
+    for stage in enumerate(stage_names):
+        if stage[0] != 0:
+            name = 'stage{}_{}'.format(stage[0], stage[1])
+            tga_exp_instance.add_stage(stage_name=name,data=read_TA_stage(excel, stage[1]))
+
+    # generating full
+    tga_exp_instance.combine_stages('all', 'full')
+    tga_exp_instance.full = tga_exp_instance.stages['full']
+
+    if calculate_DTGA == True:
+        raise NotImplementedError("DTGA calculation not implemented for TA Instruments TGA files")
+        # if exp_type != 'pyro':
+        #     raise Exception('DTGA calculation only implemented for pyro')
+        # elif exp_type == 'pyro':
+        #     return calc_DTGA_pyro(tga_exp_instance)
+        
+    else:
+        return tga_exp_instance
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Functions
 def calc_DTGA_pyro(tga_exp):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
