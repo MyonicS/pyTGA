@@ -631,8 +631,6 @@ def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_
     tga_exp_instance.details = details
     tga_exp_instance.date = details.loc['rundate']['value'].date()
     tga_exp_instance.time = details.loc['rundate']['value'].time() 
-    tga_exp_instance.extra = details
-
 
     def read_TA_stage(excel: pd.ExcelFile, stage_name: str) -> pd.DataFrame:
         """Read a stage from the TA instrument excel file."""
