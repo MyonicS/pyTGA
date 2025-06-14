@@ -8,10 +8,11 @@
 
 .. toctree::
    :hidden:
-
+   
    self
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Getting Started:
 
@@ -19,6 +20,7 @@
    notebooks/example_Notebook
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Resources:
 
@@ -27,6 +29,7 @@
    API Reference
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Development:
 
