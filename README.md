@@ -10,7 +10,7 @@ A simple python library for parsing and processing Thermogravimetric analysis (T
 
 [![Test Status](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml/badge.svg)](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml)
 
-> **⚠️ WARNING**: pyTGA is under active development. Breaking changes can occur. Please report any issues using the [Issue Tracker](https://github.com/MyonicS/pyTGA/issues).
+> **⚠️ WARNING**: pyTGA is under active development. Please report any issues using the [Issue Tracker](https://github.com/MyonicS/pyTGA/issues).
 
 ## Getting started
 
