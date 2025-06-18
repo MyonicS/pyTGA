@@ -703,6 +703,12 @@ def calc_DTGA_stage(tga_exp: TGA_exp, stage_name: str,x = 'Temp',y='relative',av
     Returns:
         TGA_exp: The TGA_exp object with the derivative added to the stage
     """
+    # enabling using 'cracking' or 'burnoff' as stage_name
+    if stage_name == 'cracking':
+        stage_name = tga_exp.cracking_stage_name
+    elif stage_name == 'burnoff':
+        stage_name = tga_exp.burnoff_stage_name
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         if stage_name == 'full':
