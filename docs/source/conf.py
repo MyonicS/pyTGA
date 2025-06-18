@@ -43,7 +43,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'nbsphinx',
-    'myst_parser'
+    'myst_parser',
+    'sphinxcontrib.bibtex'
 ]
 
 # Configure MyST-Parser
@@ -54,6 +55,11 @@ myst_enable_extensions = [
     "html_admonition",
     "html_image",
 ]
+
+# Configure bibtex
+bibtex_bibfiles = ['references.bib']
+bibtex_default_style = 'plain'
+bibtex_reference_style = 'super'
 
 # Line length settings
 # This affects .rst files rendering in the documentation

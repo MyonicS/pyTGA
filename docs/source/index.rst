@@ -35,3 +35,12 @@
 
    contributing
    changelog
+ 
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Credits:
+
+   contributors
+   papers
+   citing
