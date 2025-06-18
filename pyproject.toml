@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyTGA"
-version = "0.1.1dev2"
+version = "0.1.1dev3"
 description = "A simple python library for parsing and processing Thermogravimetric analysis (TGA) data."
 authors = [
     { name = "Sebastian Rejman", email = "s.rejman@uu.nl" }
@@ -57,3 +57,12 @@ line-length = 100
 typeCheckingMode = "off"
 
 [tool.pylance]
+
+[dependency-groups]
+docs = [
+    "furo>=2022.9.29",
+    "myst-parser>=0.18.1",
+    "nbsphinx>=0.9.3",
+    "sphinx>=4.3.2",
+    "sphinxcontrib-bibtex>=2.6.3",
+]

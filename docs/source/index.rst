@@ -17,7 +17,7 @@
    :caption: Getting Started:
 
    installation
-   notebooks/example_Notebook
+   quickstart
 
 .. toctree::
    :hidden:
@@ -35,3 +35,12 @@
 
    contributing
    changelog
+ 
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Credits:
+
+   contributors
+   papers
+   citing

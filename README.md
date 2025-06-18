@@ -6,9 +6,10 @@
 
 
 ## Description
-A simple python library for parsing and processing Thermogravimetric analysis (TGA) data. At the moment, .txt files from Perkin Elmer and Mettler Toledo are supported. Work in progress, if you have suggestions or requests please submit an issue.
+A simple python library for parsing and processing Thermogravimetric analysis (TGA) data. At the moment, .txt files from Perkin Elmer and Mettler Toledo and excel files from TA Instruments are supported. Work in progress, if you have suggestions or requests please submit an issue.
 
 [![Test Status](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml/badge.svg)](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **⚠️ WARNING**: pyTGA is under active development. Please report any issues using the [Issue Tracker](https://github.com/MyonicS/pyTGA/issues).
 
@@ -31,12 +32,12 @@ To be able to write and run code, you should use a code editor such as
 - [Spyder](https://www.spyder-ide.org/) - a scientific environment designed for Python
 
 #### Learn the basics
-There are plenty of online tutorials availible. Here are some recommendations:
+There are plenty of online tutorials available. Here are some recommendations:
 - [Boot.dev](https://www.boot.dev/)
 - [sololearn](https://www.sololearn.com/en/)
 
 #### Learn about the most important libraries
-For many applications in science, you wont need much more than these 3 libraries:
+For many applications in science, you won't need much more than these 3 libraries:
 - [NumPy](https://numpy.org/) - fundamental package for scientific computing in Python
 - [pandas](https://pandas.pydata.org/) - data analysis and manipulation library
 - [Matplotlib](https://matplotlib.org/) - comprehensive library for plotting
@@ -93,16 +94,15 @@ To get started, check out the 'Quickstart' notebook [here](https://pytga.readthe
 
 ## Documentation
 
-Full documentation of the package, including example use cases is availible [here](https://pytga.readthedocs.io/).
+Full documentation of the package, including example use cases is available [here](https://pytga.readthedocs.io/).
 
 You can also download example notebooks from the repository [here](https://github.com/MyonicS/pyTGA/tree/main/docs/source/notebooks) using [example data](https://github.com/MyonicS/pyTGA/tree/main/example_data).
 
 
 ## Roadmap
-- Support for more manufacturers
-- Multiple notebooks for specific use cases like kinetics
-- Improved test coverage
-
+- support for more manufacturers and file formats
+- unified weight/temperature/time parsing
+- more common processing features (please make suggestions with detailed explanations)
 
 ## Contributing
 Contributions are more than welcome!
