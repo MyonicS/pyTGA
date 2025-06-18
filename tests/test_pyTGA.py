@@ -1,5 +1,6 @@
 import os
 import sys
+import pytest
 current_dir = os.path.dirname(__file__)
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
@@ -13,6 +14,8 @@ import pyTGA as tga
 
 # Construct the path to the test files
 testfiledir = os.path.join(current_dir, '..', 'example_data', 'manufacturers')
+testfiledir_examples = os.path.join(current_dir, '..', 'example_data')
+
 
 def test_infer_manufacturer():
     testfile = os.path.join(testfiledir, 'MettlerToledo_example_file.txt')
@@ -34,6 +37,13 @@ def test_manufacturer_attribute():
     assert tga_exp2.manufacturer == 'Perkin Elmer'
     assert tga_exp3.manufacturer == 'TA Instruments (Excel)'
     
+def test_ANSI_encoding():
+    # some files are ANSI encoded
+    tga_exp = tga.parse_TGA(os.path.join(testfiledir_examples, 'Methane_Pyrolysis.txt'))
+    target = 5.748245
+    testweight = tga_exp.get_stage('stage1')['Unsubtracted weight'].min()
+    assert testweight == pytest.approx(target, abs=1e-5)
+
 def test_plastic_cracking_class():
     tga_exp = tga.parse_TGA('example_data/plastic_cracking_example.txt',exp_type='pyro',calculate_DTGA=True)
     tga_exp.Tmax = tga.calc_Tmax(tga_exp.cracking())
