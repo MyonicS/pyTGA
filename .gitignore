@@ -164,4 +164,7 @@ cython_debug/
 .vscode/
 build_testpypi.sh
 
+
+# Local development
 dev_notebooks/
+dev_data/
