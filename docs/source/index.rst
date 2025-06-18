@@ -17,7 +17,7 @@
    :caption: Getting Started:
 
    installation
-   notebooks/example_Notebook
+   quickstart
 
 .. toctree::
    :hidden:
