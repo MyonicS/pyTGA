@@ -191,7 +191,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             float: The amount of catalyst in mg.
         """
-        return self.burnoff()['Unsubtracted weight'].min()
+        return self.burnoff()[self.default_weight].min()
 
     def m_poly(self):
         """
@@ -200,7 +200,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             float: The amount of polymer.
         """
-        return self.cracking()['Unsubtracted weight'].max() - self.m_cat()
+        return self.cracking()[self.default_weight].max() - self.m_cat()
 
     def m_coke(self):
         """
@@ -209,7 +209,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             float: The amount of coke in mg.
         """
-        return self.cracking()['Unsubtracted weight'].min() - self.m_cat()
+        return self.cracking()[self.default_weight].min() - self.m_cat()
 
     def pct_loss(self):
         """
@@ -556,7 +556,8 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
         frame = pd.read_table(io.StringIO(split_text),delimiter=r'\s+',header=None,skiprows=3,engine='python',names=column_names, index_col='Index')
         
         # for PE TGAs (the daufault) the time is in minutes, not seconds. Adjusting for consistency
-        frame['Time(min)'] = frame['Time']/60
+        if rename_columns == True:
+            frame['Time(min)'] = frame['Time']/60
 
         #adding full
         tga_exp_instance.full = frame
@@ -671,17 +672,22 @@ def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_
 def calc_DTGA_pyro(tga_exp):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        weight_column =tga_exp.default_weight
+        time_columns = tga_exp.default_time
+        temp_columns = tga_exp.default_temp
+
+
         for stage in [tga_exp.cracking(),tga_exp.burnoff()]:
-            stage.drop(stage.index[stage['Sample Temp.'] == stage['Sample Temp.'].iloc[0]], inplace=True) # removing a couple datapoints to avoid infinities
+            stage.drop(stage.index[stage[temp_columns] == stage[temp_columns].iloc[0]], inplace=True) # removing a couple datapoints to avoid infinities
             avering_window = 30
             
-            rel_weight_twl = (stage['Unsubtracted weight']/stage['Unsubtracted weight'].max()).to_numpy()
-            rel_weight_pwl = ((stage['Unsubtracted weight']-tga_exp.m_cat())/tga_exp.m_poly()).to_numpy()
+            rel_weight_twl = (stage[weight_column]/stage[weight_column].max()).to_numpy()
+            rel_weight_pwl = ((stage[weight_column]-tga_exp.m_cat())/tga_exp.m_poly()).to_numpy()
 
             stage['rel_weight_twl'] = rel_weight_twl
             stage['rel_weight_pwl'] = rel_weight_pwl
 
-            temp = stage['Sample Temp.'].to_numpy()
+            temp = stage[temp_columns].to_numpy()
 
             stage['DTGA_pwl'] = -np.gradient(rel_weight_pwl,temp)
             stage['DTGA_pwl']=stage['DTGA_pwl'].rolling(avering_window,win_type='triang').mean()
