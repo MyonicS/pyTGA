@@ -44,9 +44,9 @@ For many applications in science, you won't need much more than these 3 librarie
 </details>
 
 ### Installation 
-Install directly from TestPyPI:
+Install from PyPI:
 ```
-pip install -i https://test.pypi.org/simple/ pyTGA
+pip install pyTGA
 ```
 
 ### Development installation

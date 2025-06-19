@@ -1,5 +1,5 @@
 # Changelog
 
-## [0.1.0] - 2025-05-18
+## [0.1.1] - 2025-06-19
 
 - Initial PyPI release

@@ -1,10 +1,8 @@
-name: Publish to TestPyPI
+name: Publish to PyPI
 
 on:
-  push:
-    branches:
-      - main  # Change if your default branch is different
-  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build-and-publish:
@@ -23,9 +21,9 @@ jobs:
       - name: Build package
         run: uv build
 
-      - name: Publish to TestPyPI
+      - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
-          uv tool run twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+          uv tool run twine upload dist/*
