@@ -11,3 +11,4 @@ numpy
 matplotlib
 scipy
 chardet
+sphinxcontrib-bibtex
