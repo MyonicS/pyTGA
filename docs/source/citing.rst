@@ -14,7 +14,7 @@ You can cite pyTGA using the following BibTeX entry:
      title={pyTGA: A Python Library for Thermogravimetric Analysis},
      author={Sebastian Rejman},
      year={2025},
-     url={https://github.com/your-username/pyTGA},
+     url={https://github.com/myonics/pyTGA},
      version={0.1.0}
    }
 
