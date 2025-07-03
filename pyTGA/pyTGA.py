@@ -371,6 +371,8 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
     # setting the manufacturer
     tga_exp_instance.manufacturer = 'Perkin Elmer'
 
+    
+
     # default column names for the TGA data
     tga_exp_instance.default_weight = 'Unsubtracted weight'
     tga_exp_instance.default_temp = 'Sample Temp.'
@@ -417,7 +419,14 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
         if date_time_match:
             tga_exp_instance.date = date_time_match.group(1)
             tga_exp_instance.time = date_time_match.group(2)
-        
+        else:
+            date_time_match = re.search(r'Data Collected:\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)', header)
+            tga_exp_instance.date = date_time_match.group(1)
+            tga_exp_instance.time = date_time_match.group(2)
+            if date_time_match == None:
+                tga_exp_instance.date = 'No date found'
+                tga_exp_instance.time = 'No time found'
+
         try:
             calib = re.split(r'TEMPERATURE CALIBRATION INPUTS: ',split[-1])[1]
         except:
