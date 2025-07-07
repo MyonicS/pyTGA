@@ -21,22 +21,26 @@ def test_infer_manufacturer():
     testfile = os.path.join(testfiledir, 'MettlerToledo_example_file.txt')
     testfile2 = os.path.join(testfiledir, 'PerkinElmer_example_file.txt')
     testfile3 = os.path.join(testfiledir, 'TA_instrument_excel.xls')
+    testfile4 = os.path.join(testfiledir, 'netzsch_example3.txt')
     result = tga.infer_manufacturer(testfile)
     result2 = tga.infer_manufacturer(testfile2)
     result3 = tga.infer_manufacturer(testfile3)
+    result4 = tga.infer_manufacturer(testfile4)
     assert result == 'Mettler Toledo' 
     assert result2 == 'Perkin Elmer' 
     assert result3 == 'TA Instruments (Excel)' 
+    assert result4 == 'Netzsch' 
 
-    
 def test_manufacturer_attribute():
     tga_exp1 = tga.parse_TGA(os.path.join(testfiledir, 'MettlerToledo_example_file.txt'))
     tga_exp2 = tga.parse_TGA(os.path.join(testfiledir, 'PerkinElmer_example_file.txt'))
     tga_exp3 = tga.parse_TGA(os.path.join(testfiledir, 'TA_instrument_excel.xls'))
+    tga_exp4 = tga.parse_TGA(os.path.join(testfiledir, 'netzsch_example3.txt'))
     assert tga_exp1.manufacturer == 'Mettler Toledo'
     assert tga_exp2.manufacturer == 'Perkin Elmer'
     assert tga_exp3.manufacturer == 'TA Instruments (Excel)'
-    
+    assert tga_exp4.manufacturer == 'Netzsch'
+
 def test_ANSI_encoding():
     # some files are ANSI encoded
     tga_exp = tga.parse_TGA(os.path.join(testfiledir_examples, 'Methane_Pyrolysis.txt'))
@@ -50,7 +54,7 @@ def test_plastic_cracking_class():
     tga_exp.T50 = tga.calc_T50(tga_exp.cracking())
     assert tga_exp.Tmax == 245.0
     assert tga_exp.T50 == 230.89
-    assert tga_exp.date == '10/04/2023'
+    assert tga_exp.date == '10/04/2023' #Todo: make date & time consistent across all parsers
     assert tga_exp.time == '08:20:41'
 
 def test_date_time_extraction_MT():
@@ -64,7 +68,13 @@ def test_date_time_extraction_TA():
     ta_exp = tga.parse_TA_excel(os.path.join(testfiledir, 'TA_instrument_excel.xls'))
     assert ta_exp.date is not None
     assert ta_exp.time is not None
-    
+
+def test_date_time_extraction_Netzsch():
+    # Test Netzsch date/time extraction
+    netzsch_exp = tga.parse_TGA(os.path.join(testfiledir, 'netzsch_example3.txt'))
+    assert netzsch_exp.date == '08.10.2024'
+    assert netzsch_exp.time == '15:04'
+
 def test_quickplot():
     # Test with Perkin Elmer data
     tga_exp_pe = tga.parse_TGA(os.path.join(testfiledir, 'PerkinElmer_example_file.txt'))
@@ -80,6 +90,11 @@ def test_quickplot():
     tga_exp_ta = tga.parse_TGA(os.path.join(testfiledir, 'TA_instrument_excel.xls'))
     fig_ta = tga.quickplot(tga_exp_ta, show=False)
     assert fig_ta is not None
+
+    # Test with Netzsch data
+    tga_exp_netzsch = tga.parse_TGA(os.path.join(testfiledir, 'netzsch_example3.txt'))
+    fig_netzsch = tga.quickplot(tga_exp_netzsch, show=False)
+    assert fig_netzsch is not None
     
     # Test with a TGA experiment with no full data
     tga_exp_no_full = tga.parse_TGA(os.path.join(testfiledir, 'PerkinElmer_example_file.txt'))

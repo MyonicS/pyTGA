@@ -6,7 +6,7 @@
 
 
 ## Description
-A simple python library for parsing and processing Thermogravimetric analysis (TGA) data. At the moment, .txt files from Perkin Elmer and Mettler Toledo and excel files from TA Instruments are supported. Work in progress, if you have suggestions or requests please submit an issue.
+A simple python library for parsing and processing Thermogravimetric analysis (TGA) data. At the moment, .txt files from Perkin Elmer, Mettler Toledo, Netzsch, and excel files from TA Instruments are supported. Work in progress, if you have suggestions or requests please submit an issue.
 
 [![Test Status](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml/badge.svg)](https://github.com/MyonicS/pyTGA/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

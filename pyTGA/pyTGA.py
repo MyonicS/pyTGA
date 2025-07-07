@@ -159,12 +159,12 @@ class TGA_pyro(TGA_exp):
 
     """
 
-    def __init__(self, stage_files=None):
+    def __init__(self, stage_files=None, **kwargs):
         super().__init__(stage_files)
         self.Tmax = None
         self.T50 = None
-        self.cracking_stage_name = 'stage4'
-        self.burnoff_stage_name = 'stage8'
+        self.cracking_stage_name = kwargs.get('cracking_stage_name', 'stage4')
+        self.burnoff_stage_name = kwargs.get('burnoff_stage_name', 'stage8')
 
     def cracking(self):
         """
@@ -191,7 +191,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             float: The amount of catalyst in mg.
         """
-        return self.burnoff()['Unsubtracted weight'].min()
+        return self.burnoff()[self.default_weight].min()
 
     def m_poly(self):
         """
@@ -200,7 +200,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             float: The amount of polymer.
         """
-        return self.cracking()['Unsubtracted weight'].max() - self.m_cat()
+        return self.cracking()[self.default_weight].max() - self.m_cat()
 
     def m_coke(self):
         """
@@ -209,7 +209,7 @@ class TGA_pyro(TGA_exp):
         Returns:
             float: The amount of coke in mg.
         """
-        return self.cracking()['Unsubtracted weight'].min() - self.m_cat()
+        return self.cracking()[self.default_weight].min() - self.m_cat()
 
     def pct_loss(self):
         """
@@ -281,10 +281,13 @@ def infer_manufacturer(filepath):
     
         with open(filepath, encoding=result['encoding']) as file:
             first_line = file.readline()
+            second_line = file.readline()
             if first_line[0:8] == 'Filename':
                 return 'Perkin Elmer'
             elif first_line[0:5] == 'Title':
                 return 'Mettler Toledo'
+            elif (first_line[0] == '#') and (second_line[0] == '#'):
+                return 'Netzsch'
             else:
                 raise ValueError('File format not recognized')
 
@@ -295,17 +298,21 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
     Currently Supported:
     - Perkin Elmer
     - Mettler Toledo
+    - TA Instruments (Excel)
+    - Netzsch
     
     Optional Parameters:
+    General:
+    - exp_type: str, the type of TGA experiment. Must be 'general', 'pyro' or 'pyro_iso'. Default is 'general'
+
     For PE TGA files:
-    - exp_type: str, the type of TGA experiment. Must be 'general', 'pyro' or 'pyro_iso'. Default is 'general'
     - calculate_DTGA: bool, whether to calculate the derivative of the TGA curve. Default is False
+
     For MT TGA files:
-    - exp_type: str, the type of TGA experiment. Must be 'general', 'pyro' or 'pyro_iso'. Default is 'general'
     - rename_columns: bool, whether to rename the columns to the default ones used in this library (as in Perkin Elmer TGA files). Default is True.
     - calculate_DTGA: bool, whether to calculate the derivative of the TGA curve. Default is False
     - stage split: str or dict or None
-        Specifies whether or how to split the TGA experiment into stages.
+        Specifies whether and how to split the TGA experiment into stages.
         If a string, it should be the path to a csv file containing the stage split information. File formating:
         stage, start_index, end_index
         stage1, 0, 100
@@ -313,6 +320,7 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
         etc.
         If a dictionary, it should be a dictionary with stage names as keys and indices as values.
 
+    
 
     Parameters
     ----------
@@ -331,17 +339,19 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
     if manufacturer == 'infer':
         manufacturer = infer_manufacturer(filepath)
     if manufacturer == 'Perkin Elmer':
-        return parse_PE(filepath, **kwargs)
+        return parse_PE(filepath, **kwargs) 
     elif manufacturer == 'Mettler Toledo':
-        return parse_MT(filepath, **kwargs)
+        return parse_MT(filepath, **kwargs) 
     elif manufacturer == 'TA Instruments (Excel)':
         return parse_TA_excel(filepath, **kwargs)
+    elif manufacturer == 'Netzsch':
+        return parse_Netzsch(filepath, **kwargs)
     else:
-        raise ValueError("manufacturer must be 'Perkin Elmer' or 'Mettler Toledo'")
+        raise ValueError("manufacturer must be 'Perkin Elmer','Mettler Toledo' or 'TA Instruments (Excel)'")
     
 # Parsing    
 ## Perkin Elmer
-def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type can be 'general' or 'pyro'
+def parse_txt(filepath, exp_type='general', calculate_DTGA=False, **kwargs):
     '''
     Parses a perkin Elmer ASCII TGA file and returns a TGA_exp object
 
@@ -360,16 +370,18 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
         The TGA_exp object
     '''
     if exp_type == 'general':
-        tga_exp_instance = TGA_exp()  # Create an instance of TGA_exp
+        tga_exp_instance = TGA_exp(**kwargs)  # Pass **kwargs
     elif exp_type == 'pyro':
-        tga_exp_instance = TGA_pyro()
+        tga_exp_instance = TGA_pyro(**kwargs)  # Pass **kwargs
     elif exp_type == 'pyro_iso':
-        tga_exp_instance = TGA_pyro_iso()
+        tga_exp_instance = TGA_pyro_iso(**kwargs)
     else:
         raise ValueError("type must be 'general','pyro' or pyro_iso'")
     
     # setting the manufacturer
     tga_exp_instance.manufacturer = 'Perkin Elmer'
+
+    
 
     # default column names for the TGA data
     tga_exp_instance.default_weight = 'Unsubtracted weight'
@@ -417,7 +429,14 @@ def parse_txt(filepath,exp_type = 'general',calculate_DTGA = False): # exp_type 
         if date_time_match:
             tga_exp_instance.date = date_time_match.group(1)
             tga_exp_instance.time = date_time_match.group(2)
-        
+        else:
+            date_time_match = re.search(r'Data Collected:\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)', header)
+            tga_exp_instance.date = date_time_match.group(1)
+            tga_exp_instance.time = date_time_match.group(2)
+            if date_time_match == None:
+                tga_exp_instance.date = 'No date found'
+                tga_exp_instance.time = 'No time found'
+
         try:
             calib = re.split(r'TEMPERATURE CALIBRATION INPUTS: ',split[-1])[1]
         except:
@@ -477,7 +496,7 @@ parse_PE = parse_txt
 #     return tga_exp
 
 ## # Mettler Toledo
-def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= None, calculate_DTGA = False):
+def parse_MT(filepath, exp_type='general', rename_columns=True, stage_split=None, calculate_DTGA=False, **kwargs):
     '''
     Parses a Mettler Toldeo TGA file and returns a TGA_exp object
 
@@ -512,11 +531,11 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
         result = chardet.detect(file.read(10000))  # Read only the first 10,000 bytes
 
     if exp_type == 'general':
-        tga_exp_instance = TGA_exp()  # Create an instance of TGA_exp
+        tga_exp_instance = TGA_exp(**kwargs)  # Create an instance of TGA_exp
     elif exp_type == 'pyro':
-        tga_exp_instance = TGA_pyro()
+        tga_exp_instance = TGA_pyro(**kwargs)  # Pass **kwargs for cracking and burnoff stages
     elif exp_type == 'pyro_iso':
-        tga_exp_instance = TGA_pyro_iso()
+        tga_exp_instance = TGA_pyro_iso(**kwargs)
     else:
         raise ValueError("exp_type must be 'general','pyro' or pyro_iso'")
     
@@ -556,7 +575,8 @@ def parse_MT(filepath,exp_type = 'general', rename_columns=True, stage_split= No
         frame = pd.read_table(io.StringIO(split_text),delimiter=r'\s+',header=None,skiprows=3,engine='python',names=column_names, index_col='Index')
         
         # for PE TGAs (the daufault) the time is in minutes, not seconds. Adjusting for consistency
-        frame['Time(min)'] = frame['Time']/60
+        if rename_columns == True:
+            frame['Time(min)'] = frame['Time']/60
 
         #adding full
         tga_exp_instance.full = frame
@@ -657,12 +677,116 @@ def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_
 
 
 
+#Netzsch------------------------------------------------------------------------------------
+def read_Netzsch_metadata(filepath) -> dict:
+    """
+    Reads metadata from a Netzsch TGA file.
+    
+    Parameters:
+    filepath (str): Path to the Netzsch TGA file
+    
+    Returns:
+    dict: Dictionary containing all metadata entries
+    """
+    metadata = {}
+    
+    with open(filepath, 'r', encoding='cp1252') as file:
+        skiprows = 0
+        for line in file:
+            line = line.strip()
+            skiprows += 1
+            
+            # Stop reading when we reach an empty line (end of metadata)
+            if not line:
+                break
+                
+            # Lines starting with '#' are metadata entries
+            if line.startswith('#'):
+                # Remove the '#' and split on the first ':'
+                line_content = line[1:]
+                if ':' in line_content:
+                    key, value = line_content.split(':', 1)
+                    metadata[key] = value.strip()
+        metadata['skiprows'] = skiprows
+    
+    return metadata
 
 
+def parse_Netzsch(filepath,exp_type = 'general',calculate_DTGA = False, **kwargs):
+    '''
+    Parses a Netzsch txt file and returns a TGA_exp object
+
+    Parameters
+    ----------
+    filepath : str
+        The path to the TGA file
+    exp_type : str
+        The type of TGA experiment. Must be 'general', 'pyro' or 'pyro_iso'. Default is 'general'
+        Presently only 'general' is supported for this format
+    calculate_DTGA : bool
+        Whether to calculate the derivative of the TGA curve. Default is False
+
+    Returns
+    -------
+    TGA_exp
+        The TGA_exp object
+    '''
+    
+    if exp_type == 'general':
+        tga_exp_instance = TGA_exp()  # Create an instance of TGA_exp
+    elif exp_type == 'pyro':
+        tga_exp_instance = TGA_pyro(**kwargs)  # Pass **kwargs for cracking and burnoff stages
+    elif exp_type == 'pyro_iso':
+        tga_exp_instance = TGA_pyro_iso()
+    else:
+        raise ValueError("type must be 'general','pyro' or pyro_iso'")
+    tga_exp_instance.manufacturer = 'Netzsch'
+
+    #Columns and Units
+    tga_exp_instance.default_weight = 'Weight'
+    tga_exp_instance.default_temp = 'Temp'
+    tga_exp_instance.default_time = 'Time'
+
+    #Units
+    tga_exp_instance.default_weight_unit = 'mg'
+    tga_exp_instance.default_temp_unit = '°C'
+    tga_exp_instance.default_time_unit = 'min'
+
+    # reading metadata
+    metadata = read_Netzsch_metadata(filepath)
+    starting_weight = float(metadata['SAMPLE MASS /mg'])
+
+    # adding metadata to the experiment instance
+    tga_exp_instance.details = metadata
+    date_time = metadata['DATE/TIME']
+    date, time = date_time.split(' ')
+    tga_exp_instance.date = date
+    tga_exp_instance.time = time
 
 
+    data_full = pd.read_csv(filepath,skiprows=metadata['skiprows'],sep=';', engine='python',encoding='latin1')
+    #renaming columns
+    if '##Temp./C' in data_full.columns:
+        data_full.rename(columns={'##Temp./C': tga_exp_instance.default_temp, 'Time/min': tga_exp_instance.default_time}, inplace=True)
+    elif '##Temp./°C' in data_full.columns:
+        data_full.rename(columns={'##Temp./°C': tga_exp_instance.default_temp, 'Time/min': tga_exp_instance.default_time}, inplace=True)
+    else:
+        print("Warning: Temperature column not found. Please check the file format.")
+    data_full['Weight'] = data_full['Mass/%'] * starting_weight / 100
 
+    #adding full dataset
+    tga_exp_instance.full = data_full
 
+    #Adding stages
+    #if the data_full contains a 'Segment' column, we can use it to add stages
+    if 'Segment' in data_full.columns:
+        for segment in data_full['Segment'].unique():
+            stage_data = data_full[data_full['Segment'] == segment]
+            tga_exp_instance.add_stage('stage{}'.format(segment), stage_data)
+    else:
+        # If no 'Segment' column, we add the full data as a single stage
+        tga_exp_instance.add_stage('stage1', data_full)
+    return tga_exp_instance
 
 
 
@@ -671,17 +795,22 @@ def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_
 def calc_DTGA_pyro(tga_exp):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        weight_column =tga_exp.default_weight
+        time_columns = tga_exp.default_time
+        temp_columns = tga_exp.default_temp
+
+
         for stage in [tga_exp.cracking(),tga_exp.burnoff()]:
-            stage.drop(stage.index[stage['Sample Temp.'] == stage['Sample Temp.'].iloc[0]], inplace=True) # removing a couple datapoints to avoid infinities
+            stage.drop(stage.index[stage[temp_columns] == stage[temp_columns].iloc[0]], inplace=True) # removing a couple datapoints to avoid infinities
             avering_window = 30
             
-            rel_weight_twl = (stage['Unsubtracted weight']/stage['Unsubtracted weight'].max()).to_numpy()
-            rel_weight_pwl = ((stage['Unsubtracted weight']-tga_exp.m_cat())/tga_exp.m_poly()).to_numpy()
+            rel_weight_twl = (stage[weight_column]/stage[weight_column].max()).to_numpy()
+            rel_weight_pwl = ((stage[weight_column]-tga_exp.m_cat())/tga_exp.m_poly()).to_numpy()
 
             stage['rel_weight_twl'] = rel_weight_twl
             stage['rel_weight_pwl'] = rel_weight_pwl
 
-            temp = stage['Sample Temp.'].to_numpy()
+            temp = stage[temp_columns].to_numpy()
 
             stage['DTGA_pwl'] = -np.gradient(rel_weight_pwl,temp)
             stage['DTGA_pwl']=stage['DTGA_pwl'].rolling(avering_window,win_type='triang').mean()
@@ -829,6 +958,13 @@ def quickplot(tga_exp, show=True):
 def calc_Tmax(stage, temp_col='Sample Temp.'):
     '''
     For a stage in the experiment, returns the temperature at which the derivative of the TGA curve is max.
+    For non-PE TGA files, the temp_col must be specified manually.
+    Parameters:
+    ----------
+    stage : pd.DataFrame
+        Stage of the experiment or 'full'
+    temp_col : str
+        Name of the temperature column
     '''
     if not isinstance(stage, pd.DataFrame):
         raise ValueError("stage must be a pandas DataFrame")
