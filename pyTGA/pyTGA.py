@@ -678,7 +678,7 @@ def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_
 
 
 #Netzsch------------------------------------------------------------------------------------
-def read_Netzsch_metadata(filepath: str|os.PathLike) -> dict:
+def read_Netzsch_metadata(filepath) -> dict:
     """
     Reads metadata from a Netzsch TGA file.
     
