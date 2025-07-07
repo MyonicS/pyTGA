@@ -844,6 +844,13 @@ def quickplot(tga_exp, show=True):
 def calc_Tmax(stage, temp_col='Sample Temp.'):
     '''
     For a stage in the experiment, returns the temperature at which the derivative of the TGA curve is max.
+    For non-PE TGA files, the temp_col must be specified manually.
+    Parameters:
+    ----------
+    stage : pd.DataFrame
+        Stage of the experiment or 'full'
+    temp_col : str
+        Name of the temperature column
     '''
     if not isinstance(stage, pd.DataFrame):
         raise ValueError("stage must be a pandas DataFrame")
