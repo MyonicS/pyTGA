@@ -345,7 +345,7 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
     elif manufacturer == 'TA Instruments (Excel)':
         return parse_TA_excel(filepath, **kwargs)
     elif manufacturer == 'Netzsch':
-        return parse_netzsch(filepath, **kwargs)
+        return parse_Netzsch(filepath, **kwargs)
     else:
         raise ValueError("manufacturer must be 'Perkin Elmer','Mettler Toledo' or 'TA Instruments (Excel)'")
     
@@ -712,7 +712,7 @@ def read_Netzsch_metadata(filepath: str|os.PathLike) -> dict:
     return metadata
 
 
-def parse_netzsch(filepath,exp_type = 'general',calculate_DTGA = False, **kwargs):
+def parse_Netzsch(filepath,exp_type = 'general',calculate_DTGA = False, **kwargs):
     '''
     Parses a Netzsch txt file and returns a TGA_exp object
 
@@ -740,7 +740,6 @@ def parse_netzsch(filepath,exp_type = 'general',calculate_DTGA = False, **kwargs
         tga_exp_instance = TGA_pyro_iso()
     else:
         raise ValueError("type must be 'general','pyro' or pyro_iso'")
-    # print('HI')
     tga_exp_instance.manufacturer = 'Netzsch'
 
     #Columns and Units
