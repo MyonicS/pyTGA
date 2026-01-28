@@ -649,12 +649,20 @@ def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_
 
     # adding metadata
     tga_exp_instance.details = details
-    tga_exp_instance.date = details.loc['rundate']['value'].date()
-    tga_exp_instance.time = details.loc['rundate']['value'].time() 
+    tga_exp_instance.date = details.loc['rundate']['value']
+    tga_exp_instance.time = details.loc['rundate']['value']
 
     def read_TA_stage(excel: pd.ExcelFile, stage_name: str) -> pd.DataFrame:
         """Read a stage from the TA instrument excel file."""
-        return pd.read_excel(excel, sheet_name=stage_name, skiprows=3, names=['Time (min)', 'Temperature (C)', 'Weight (mg)', 'Weight (%)'])
+        rename_dict = {
+            'Time': 'Time (min)',
+            'Temperature': 'Temperature (C)',
+            'Weight': 'Weight (mg)',
+            'Weight (%)': 'Weight (%)'
+        }
+        names = pd.read_excel(excel, sheet_name=stage_name, header=0, nrows=1).iloc[0].tolist()
+        names = [rename_dict.get(name, name) for name in names]
+        return pd.read_excel(excel, sheet_name=stage_name, skiprows=3, names=names)
 
     for stage in enumerate(stage_names):
         if stage[0] != 0:
