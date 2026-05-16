@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0]
+
+### New Features
+- minor fix to TA instruments excel parser
+- Now supporting 2 different versions of TA instruments .txt files
+
 ## [0.2.0]
 
 ### New Features
