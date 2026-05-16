@@ -312,6 +312,8 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
     - Perkin Elmer
     - Mettler Toledo
     - TA Instruments (Excel)
+    - TA Instruments (txt) - TRIOS software format
+    - TA Instruments (txt_old) - Q500 format
     - Netzsch
     
     Optional Parameters:
