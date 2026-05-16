@@ -267,29 +267,42 @@ class TGA_pyro_iso(TGA_exp):
 def infer_manufacturer(filepath):
     '''
     Infers the manufacturer of the TGA file.
-    Returns 'Perkin Elmer', 'Mettler Toledo', or 'TA Instruments (Excel)'
+    Returns 'Perkin Elmer', 'Mettler Toledo', 'TA Instruments (Excel)',
+    'TA Instruments (txt)', or 'TA Instruments (txt_old)'
     '''
     # Check if file is an Excel file based on extension
     file_extension = os.path.splitext(filepath)[1].lower()
     if file_extension in ['.xlsx', '.xls']:
         return 'TA Instruments (Excel)'
-    
+
     # For text files, check content
+    with open(filepath, 'rb') as file:
+        raw = file.read(10000)
+        result = chardet.detect(raw)
+
+    encoding = result['encoding'] or 'utf-8'
+
+    # UTF-16 = old TA Q500 format
+    if 'UTF-16' in encoding:
+        with open(filepath, encoding='utf-16') as file:
+            first_line = file.readline().strip()
+        if first_line == 'CLOSED':
+            return 'TA Instruments (txt_old)'
+
+    with open(filepath, encoding=encoding) as file:
+        first_line = file.readline()
+        second_line = file.readline()
+
+    if first_line.startswith('Filename\t'):
+        return 'TA Instruments (txt)'
+    elif first_line.startswith('Filename:') or first_line[0:8] == 'Filename':
+        return 'Perkin Elmer'
+    elif first_line[0:5] == 'Title':
+        return 'Mettler Toledo'
+    elif (first_line[0] == '#') and (second_line[0] == '#'):
+        return 'Netzsch'
     else:
-        with open(filepath, 'rb') as file:
-            result = chardet.detect(file.read(10000))
-    
-        with open(filepath, encoding=result['encoding']) as file:
-            first_line = file.readline()
-            second_line = file.readline()
-            if first_line[0:8] == 'Filename':
-                return 'Perkin Elmer'
-            elif first_line[0:5] == 'Title':
-                return 'Mettler Toledo'
-            elif (first_line[0] == '#') and (second_line[0] == '#'):
-                return 'Netzsch'
-            else:
-                raise ValueError('File format not recognized')
+        raise ValueError('File format not recognized')
 
 def parse_TGA(filepath, manufacturer='infer', **kwargs):
     '''
@@ -299,6 +312,8 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
     - Perkin Elmer
     - Mettler Toledo
     - TA Instruments (Excel)
+    - TA Instruments (txt) - TRIOS software format
+    - TA Instruments (txt_old) - Q500 format
     - Netzsch
     
     Optional Parameters:
@@ -339,15 +354,19 @@ def parse_TGA(filepath, manufacturer='infer', **kwargs):
     if manufacturer == 'infer':
         manufacturer = infer_manufacturer(filepath)
     if manufacturer == 'Perkin Elmer':
-        return parse_PE(filepath, **kwargs) 
+        return parse_PE(filepath, **kwargs)
     elif manufacturer == 'Mettler Toledo':
-        return parse_MT(filepath, **kwargs) 
+        return parse_MT(filepath, **kwargs)
     elif manufacturer == 'TA Instruments (Excel)':
         return parse_TA_excel(filepath, **kwargs)
+    elif manufacturer == 'TA Instruments (txt)':
+        return parse_TA_txt(filepath, **kwargs)
+    elif manufacturer == 'TA Instruments (txt_old)':
+        return parse_TA_txt_old(filepath, **kwargs)
     elif manufacturer == 'Netzsch':
         return parse_Netzsch(filepath, **kwargs)
     else:
-        raise ValueError("manufacturer must be 'Perkin Elmer','Mettler Toledo' or 'TA Instruments (Excel)'")
+        raise ValueError("manufacturer must be 'Perkin Elmer', 'Mettler Toledo', 'TA Instruments (Excel)', 'TA Instruments (txt)', 'TA Instruments (txt_old)', or 'Netzsch'")
     
 # Parsing    
 ## Perkin Elmer
@@ -683,6 +702,162 @@ def parse_TA_excel(filepath,exp_type = 'general',calculate_DTGA = False): # exp_
     else:
         return tga_exp_instance
 
+
+def parse_TA_txt(filepath, exp_type='general', **kwargs):
+    '''
+    Parses a TA Instruments TRIOS text file (.txt, UTF-8) and returns a TGA_exp object.
+    This format is produced by the TRIOS software (e.g. HP-TGA75).
+
+    Parameters
+    ----------
+    filepath : str
+        Path to the TGA file
+    exp_type : str
+        'general', 'pyro', or 'pyro_iso'. Default is 'general'
+
+    Returns
+    -------
+    TGA_exp
+    '''
+    if exp_type == 'general':
+        tga_exp_instance = TGA_exp(**kwargs)
+    elif exp_type == 'pyro':
+        tga_exp_instance = TGA_pyro(**kwargs)
+    elif exp_type == 'pyro_iso':
+        tga_exp_instance = TGA_pyro_iso(**kwargs)
+    else:
+        raise ValueError("exp_type must be 'general', 'pyro', or 'pyro_iso'")
+
+    tga_exp_instance.manufacturer = 'TA Instruments (txt)'
+    tga_exp_instance.default_time = 'Time (min)'
+    tga_exp_instance.default_weight = 'Weight (mg)'
+    tga_exp_instance.default_temp = 'Temperature (°C)'
+
+    with open(filepath, encoding='utf-8') as f:
+        lines = f.readlines()
+
+    # Parse header metadata (everything before [step])
+    metadata = {}
+    step_idx = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped == '[step]':
+            step_idx = i
+            break
+        if '\t' in line:
+            key, _, val = line.partition('\t')
+            metadata[key.strip()] = val.strip()
+
+    if step_idx is None:
+        raise ValueError("Could not find '[step]' data section in file")
+
+    # Extract date/time: prefer [File Parameters] 'Run date', fallback to top-level 'rundate'
+    run_date = metadata.get('Run date', metadata.get('rundate', None))
+    if run_date:
+        parts = run_date.split()
+        tga_exp_instance.date = parts[0]
+        tga_exp_instance.time = parts[1] if len(parts) > 1 else None
+    tga_exp_instance.details = metadata
+
+    # Data block: [step] line, then stage-name line, then header row, then units row, then data
+    stage_name = lines[step_idx + 1].strip()
+    data_header_idx = step_idx + 2
+    data_units_idx = step_idx + 3
+    data_start_idx = step_idx + 4
+
+    col_names = lines[data_header_idx].rstrip('\n').split('\t')
+    col_units = lines[data_units_idx].rstrip('\n').split('\t')
+
+    # Build unique column names: "Name (unit)" when unit is non-empty, else "Name"
+    final_cols = []
+    for name, unit in zip(col_names, col_units):
+        unit = unit.strip()
+        final_cols.append(f'{name} ({unit})' if unit else name)
+
+    data_text = ''.join(lines[data_start_idx:])
+    frame = pd.read_csv(io.StringIO(data_text), sep='\t', header=None, names=final_cols, engine='python')
+
+    tga_exp_instance.full = frame
+    tga_exp_instance.add_stage(stage_name, frame)
+    return tga_exp_instance
+
+
+def parse_TA_txt_old(filepath, exp_type='general', **kwargs):
+    '''
+    Parses an older TA Instruments text file (UTF-16, e.g. TGA Q500) and returns a TGA_exp object.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to the TGA file
+    exp_type : str
+        'general', 'pyro', or 'pyro_iso'. Default is 'general'
+
+    Returns
+    -------
+    TGA_exp
+    '''
+    if exp_type == 'general':
+        tga_exp_instance = TGA_exp(**kwargs)
+    elif exp_type == 'pyro':
+        tga_exp_instance = TGA_pyro(**kwargs)
+    elif exp_type == 'pyro_iso':
+        tga_exp_instance = TGA_pyro_iso(**kwargs)
+    else:
+        raise ValueError("exp_type must be 'general', 'pyro', or 'pyro_iso'")
+
+    tga_exp_instance.manufacturer = 'TA Instruments (txt_old)'
+    tga_exp_instance.default_time = 'Time (min)'
+    tga_exp_instance.default_weight = 'Weight (mg)'
+    tga_exp_instance.default_temp = 'Temperature (°C)'
+
+    with open(filepath, encoding='utf-16') as f:
+        lines = f.readlines()
+
+    metadata = {}
+    signals = {}
+    data_start_idx = None
+
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped == 'StartOfData':
+            data_start_idx = i + 1
+            break
+        if '\t' in line:
+            parts = line.strip().split('\t')
+            key = parts[0]
+            val = parts[1] if len(parts) > 1 else ''
+            if key.startswith('Sig') and key[3:].isdigit():
+                signals[int(key[3:])] = val
+            else:
+                metadata[key] = val
+
+    if data_start_idx is None:
+        raise ValueError("Could not find 'StartOfData' marker in file")
+
+    tga_exp_instance.details = metadata
+    date_str = metadata.get('Date', None)
+    time_str = metadata.get('Time', None)
+    tga_exp_instance.date = date_str
+    tga_exp_instance.time = time_str
+
+    # Build column names from signal list in file order
+    col_names = [signals[k] for k in sorted(signals.keys())]
+
+    # Rename to standard names used by this library
+    rename = {
+        'Time (min)': 'Time (min)',
+        'Temperature (°C)': 'Temperature (°C)',
+        'Weight (mg)': 'Weight (mg)',
+    }
+    col_names = [rename.get(c, c) for c in col_names]
+
+    data_text = ''.join(lines[data_start_idx:])
+    frame = pd.read_csv(io.StringIO(data_text), sep='\t', header=None, names=col_names, engine='python')
+
+    tga_exp_instance.full = frame
+    tga_exp_instance.add_stage('stage1', frame)
+    return tga_exp_instance
 
 
 #Netzsch------------------------------------------------------------------------------------

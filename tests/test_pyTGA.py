@@ -22,24 +22,34 @@ def test_infer_manufacturer():
     testfile2 = os.path.join(testfiledir, 'PerkinElmer_example_file.txt')
     testfile3 = os.path.join(testfiledir, 'TA_instrument_excel.xls')
     testfile4 = os.path.join(testfiledir, 'netzsch_example3.txt')
+    testfile5 = os.path.join(testfiledir, 'TAInstruments_TRIOS_example_file.txt')
+    testfile6 = os.path.join(testfiledir, 'TAInstruments_example_file.txt')
     result = tga.infer_manufacturer(testfile)
     result2 = tga.infer_manufacturer(testfile2)
     result3 = tga.infer_manufacturer(testfile3)
     result4 = tga.infer_manufacturer(testfile4)
-    assert result == 'Mettler Toledo' 
-    assert result2 == 'Perkin Elmer' 
-    assert result3 == 'TA Instruments (Excel)' 
-    assert result4 == 'Netzsch' 
+    result5 = tga.infer_manufacturer(testfile5)
+    result6 = tga.infer_manufacturer(testfile6)
+    assert result == 'Mettler Toledo'
+    assert result2 == 'Perkin Elmer'
+    assert result3 == 'TA Instruments (Excel)'
+    assert result4 == 'Netzsch'
+    assert result5 == 'TA Instruments (txt)'
+    assert result6 == 'TA Instruments (txt_old)'
 
 def test_manufacturer_attribute():
     tga_exp1 = tga.parse_TGA(os.path.join(testfiledir, 'MettlerToledo_example_file.txt'))
     tga_exp2 = tga.parse_TGA(os.path.join(testfiledir, 'PerkinElmer_example_file.txt'))
     tga_exp3 = tga.parse_TGA(os.path.join(testfiledir, 'TA_instrument_excel.xls'))
     tga_exp4 = tga.parse_TGA(os.path.join(testfiledir, 'netzsch_example3.txt'))
+    tga_exp5 = tga.parse_TGA(os.path.join(testfiledir, 'TAInstruments_TRIOS_example_file.txt'))
+    tga_exp6 = tga.parse_TGA(os.path.join(testfiledir, 'TAInstruments_example_file.txt'))
     assert tga_exp1.manufacturer == 'Mettler Toledo'
     assert tga_exp2.manufacturer == 'Perkin Elmer'
     assert tga_exp3.manufacturer == 'TA Instruments (Excel)'
     assert tga_exp4.manufacturer == 'Netzsch'
+    assert tga_exp5.manufacturer == 'TA Instruments (txt)'
+    assert tga_exp6.manufacturer == 'TA Instruments (txt_old)'
 
 def test_ANSI_encoding():
     # some files are ANSI encoded
@@ -116,12 +126,12 @@ def test_parse_TA_excel():
 def test_TA_stages_and_metadata():
     # Test that stages and metadata are correctly parsed
     ta_exp = tga.parse_TGA(os.path.join(testfiledir, 'TA_instrument_excel.xls'))
-    
+
     # Check metadata
     assert ta_exp.details is not None
     assert ta_exp.date is not None
     assert ta_exp.time is not None
-    
+
     # Check stage data
     for stage_name in ta_exp.stage_names():
         if stage_name != 'full':
@@ -130,4 +140,48 @@ def test_TA_stages_and_metadata():
             assert ta_exp.default_temp in stage.columns
             assert ta_exp.default_weight in stage.columns
             assert ta_exp.default_time in stage.columns
+
+def test_parse_TA_txt():
+    ta_exp = tga.parse_TA_txt(os.path.join(testfiledir, 'TAInstruments_TRIOS_example_file.txt'))
+    assert ta_exp.manufacturer == 'TA Instruments (txt)'
+    assert ta_exp.default_time == 'Time (min)'
+    assert ta_exp.default_weight == 'Weight (mg)'
+    assert ta_exp.default_temp == 'Temperature (°C)'
+    assert ta_exp.date == '31.08.2022'
+    assert ta_exp.time == '11:41:23'
+    assert ta_exp.full is not None
+    assert ta_exp.full.shape[0] > 0
+    assert 'Merged 1' in ta_exp.stage_names()
+    stage = ta_exp.get_stage('Merged 1')
+    assert ta_exp.default_temp in stage.columns
+    assert ta_exp.default_weight in stage.columns
+    assert ta_exp.default_time in stage.columns
+    assert stage[ta_exp.default_weight].iloc[0] == pytest.approx(4.491, abs=1e-3)
+
+def test_parse_TA_txt_old():
+    ta_exp = tga.parse_TA_txt_old(os.path.join(testfiledir, 'TAInstruments_example_file.txt'))
+    assert ta_exp.manufacturer == 'TA Instruments (txt_old)'
+    assert ta_exp.default_time == 'Time (min)'
+    assert ta_exp.default_weight == 'Weight (mg)'
+    assert ta_exp.default_temp == 'Temperature (°C)'
+    assert ta_exp.date == '2018-12-17'
+    assert ta_exp.time == '19:36:37'
+    assert ta_exp.full is not None
+    assert ta_exp.full.shape[0] > 0
+    assert 'stage1' in ta_exp.stage_names()
+    stage = ta_exp.get_stage('stage1')
+    assert ta_exp.default_temp in stage.columns
+    assert ta_exp.default_weight in stage.columns
+    assert ta_exp.default_time in stage.columns
+    non_zero = stage[stage[ta_exp.default_weight] > 0][ta_exp.default_weight].iloc[0]
+    assert non_zero == pytest.approx(20.8216, abs=1e-4)
+
+def test_quickplot_TA_txt():
+    ta_exp = tga.parse_TGA(os.path.join(testfiledir, 'TAInstruments_TRIOS_example_file.txt'))
+    fig = tga.quickplot(ta_exp, show=False)
+    assert fig is not None
+
+    ta_exp_old = tga.parse_TGA(os.path.join(testfiledir, 'TAInstruments_example_file.txt'))
+    fig_old = tga.quickplot(ta_exp_old, show=False)
+    assert fig_old is not None
 
