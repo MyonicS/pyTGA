@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixes/Minor Changes
+- Minimum supported Python raised to 3.9 (matches the versions tested in CI)
+- Security updates in the lockfile: Pillow, certifi, tornado, mistune, nbconvert, black; setuptools dropped
+
 ## [0.3.0]
 
 ### New Features
